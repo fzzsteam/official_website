@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>疯狂的荔枝 — 方直智胜科技</title>
+  <meta name="description" content="《疯狂的荔枝》— 一颗荔枝，一场疯狂。方直智胜 AI 短剧代表作。">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <a href="index.html" class="back-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+    返回
+  </a>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">方直智胜</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">首页</a></li>
+      <li><a href="about.html">关于我们</a></li>
+      <li><a href="business.html">业务介绍</a></li>
+      <li><a href="contact.html">联系我们</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="drama-hero">
+    <video autoplay muted loop playsinline poster="assets/lizhi/cover.png">
+      <source src="assets/lizhi/trailer.mp4" type="video/mp4">
+    </video>
+    <div class="drama-hero-overlay"></div>
+    <div class="drama-hero-content">
+      <div class="drama-hero-title">疯狂的荔枝</div>
+      <div class="drama-hero-title-en">The Crazy Lychee</div>
+      <button class="hero-play-btn" id="openModal">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        播放预告片
+      </button>
+    </div>
+  </section>
+
+  <!-- Plot -->
+  <section class="drama-section">
+    <div class="drama-plot">
+      <img src="assets/lizhi/poster2.png" alt="疯狂的荔枝海报" class="drama-plot-poster">
+      <div class="drama-plot-text">
+        <div class="section-title">剧情简介</div>
+        <p class="section-body">
+          大唐盛世，岭南荔枝声名远播。御史柳承业奉命押送一批珍贵荔枝进京，不料途中遭遇奇人异事，一颗小小的荔枝竟牵动出一段啼笑皆非的江湖恩怨。书生石头、侠女苏凌薇、神秘客秦烈，各怀心事，命运交织。荔枝传情，笑中有泪，疯狂之中自有真情。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Characters -->
+  <section class="drama-section" style="padding-top: 0;">
+    <div class="section-title" style="margin-bottom: 32px;">角色介绍</div>
+    <div class="characters-grid">
+      <div class="char-card">
+        <img src="assets/lizhi/char-liuchengy.jpg" alt="柳承业">
+        <div class="char-name">柳承业</div>
+        <div class="char-role">御史 · 押运使</div>
+      </div>
+      <div class="char-card">
+        <img src="assets/lizhi/char-sulingwei.jpg" alt="苏凌薇">
+        <div class="char-name">苏凌薇</div>
+        <div class="char-role">侠女 · 神秘人</div>
+      </div>
+      <div class="char-card">
+        <img src="assets/lizhi/char-qinlie.jpg" alt="秦烈">
+        <div class="char-name">秦烈</div>
+        <div class="char-role">江湖客 · 幕后黑手</div>
+      </div>
+      <div class="char-card">
+        <img src="assets/lizhi/char-shitou.jpg" alt="石头">
+        <div class="char-name">石头</div>
+        <div class="char-role">书生 · 意外卷入</div>
+      </div>
+      <div class="char-card">
+        <img src="assets/lizhi/char-shenmo.jpg" alt="沈默">
+        <div class="char-name">沈默</div>
+        <div class="char-role">暗卫 · 护送人</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="inner-footer">
+    <span class="footer-text">© 2026 深圳市方直智胜科技有限公司</span>
+    <span class="footer-text">粤ICP备XXXXXXXX号</span>
+  </div>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="videoModal">
+    <button class="modal-close" id="closeModal">✕</button>
+    <video controls id="modalVideo">
+      <source src="assets/lizhi/trailer.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/drama.js"></script>
+</body>
+</html>

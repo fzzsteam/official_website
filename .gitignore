@@ -1,0 +1,24 @@
+# System
+.DS_Store
+.superpowers/
+node_modules/
+dist/
+*.log
+.cache/
+
+# Source media directories (raw originals, not deployed)
+疯狂的荔枝/
+即将上线封面/
+
+# Media files in assets (managed separately, use placeholders below)
+assets/**/*.jpg
+assets/**/*.jpeg
+assets/**/*.png
+assets/**/*.webp
+assets/**/*.gif
+assets/**/*.mp4
+assets/**/*.mov
+assets/**/*.webm
+
+# AI planning files
+docs/superpowers/
