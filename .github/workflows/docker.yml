@@ -38,6 +38,12 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
+      - name: 安装 aliyun CLI
+        run: |
+          curl -sLo /tmp/aliyun-cli.tgz https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz
+          tar -xzf /tmp/aliyun-cli.tgz -C /tmp
+          sudo mv /tmp/aliyun /usr/local/bin/aliyun
+
       - name: 构建并推送镜像
         uses: docker/build-push-action@v5
         with:
@@ -48,3 +54,22 @@ jobs:
             crpi-7ajeyduewy90avu4.cn-shenzhen.personal.cr.aliyuncs.com/fzzs/official_website:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: 部署到 SAE 生产应用
+        env:
+          ALIBABACLOUD_ACCESS_KEY_ID: ${{ secrets.ALIYUN_SAE_AK_ID }}
+          ALIBABACLOUD_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_SAE_AK_SECRET }}
+          ALIBABACLOUD_REGION_ID: ${{ vars.SAE_REGION_ID }}
+          SAE_PROD_APP_ID: ${{ secrets.SAE_PROD_APP_ID }}
+        run: |
+          if [ -z "$SAE_PROD_APP_ID" ]; then
+            echo "SAE_PROD_APP_ID 未配置，跳过生产部署"
+            exit 0
+          fi
+
+          aliyun sae DeployApplication \
+            --AppId "$SAE_PROD_APP_ID" \
+            --ImageUrl "crpi-7ajeyduewy90avu4-vpc.cn-shenzhen.personal.cr.aliyuncs.com/fzzs/official_website:latest"
+
+          echo "SAE 生产环境部署已触发，请在控制台确认发布状态"
+          echo "镜像：crpi-7ajeyduewy90avu4-vpc.cn-shenzhen.personal.cr.aliyuncs.com/fzzs/official_website:latest"
