@@ -285,6 +285,19 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   pointer-events: none;
 }
 
+/* ── Intro entrance: slower spring easing, removed after animation ── */
+.drama-card.is-intro {
+  transition:
+    flex 1.1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.9s ease,
+    box-shadow 0.9s ease;
+}
+
+.drama-card.is-intro .card-img {
+  transition: filter 1.1s ease, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ── Active state: pure flex expansion ── */
 .drama-card.is-active {
   flex: 4;

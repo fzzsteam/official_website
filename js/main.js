@@ -46,10 +46,13 @@
     cards[0].classList.add('is-active');
   });
 
-  /* Intro: auto-select first card after page load */
+  /* Intro: auto-select first card after page load with a smooth entrance */
   setTimeout(function () {
-    cards[0].classList.add('is-active');
-  }, 400);
+    cards[0].classList.add('is-intro', 'is-active');
+    setTimeout(function () {
+      cards[0].classList.remove('is-intro');
+    }, 1300);
+  }, 500);
 
   /* Touch: first tap expands, second tap follows link */
   cards.forEach(function (card) {
