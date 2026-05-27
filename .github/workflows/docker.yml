@@ -5,11 +5,6 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      version:
-        description: "镜像版本号（留空则用时间戳+短 SHA）"
-        required: false
-        type: string
 
 jobs:
   docker:
@@ -23,16 +18,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 获取镜像版本
-        id: version
+      - name: 检查 ACR Secrets
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            TAG="${{ inputs.version }}"
-          else
-            TAG="$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
+          if [ -z "${{ secrets.ACR_USERNAME }}" ] || [ -z "${{ secrets.ACR_PASSWORD }}" ]; then
+            echo "缺少 ACR_USERNAME 或 ACR_PASSWORD secrets"
+            echo "请到 GitHub Organization/Repository Secrets 确认："
+            echo "1. secret 名称是否为 ACR_USERNAME / ACR_PASSWORD"
+            echo "2. 该组织 secret 是否授权给 official_website 仓库"
+            exit 1
           fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$TAG"
 
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,7 +45,6 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            crpi-7ajeyduewy90avu4.cn-shenzhen.personal.cr.aliyuncs.com/fzzs/official_website:${{ steps.version.outputs.tag }}
             crpi-7ajeyduewy90avu4.cn-shenzhen.personal.cr.aliyuncs.com/fzzs/official_website:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
