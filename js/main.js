@@ -46,6 +46,11 @@
     cards[0].classList.add('is-active');
   });
 
+  /* Intro: auto-select first card after page load */
+  setTimeout(function () {
+    cards[0].classList.add('is-active');
+  }, 400);
+
   /* Touch: first tap expands, second tap follows link */
   cards.forEach(function (card) {
     card.addEventListener('click', function (e) {
