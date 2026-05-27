@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>方直智胜科技 — AI 短剧制作</title>
   <meta name="description" content="深圳市方直智胜科技有限公司，专注 AI 短剧与漫剧内容创作。">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260527c">
 </head>
+
 <body>
 
   <div id="cursor"></div>
@@ -26,7 +28,7 @@
   <section class="cards-section">
 
     <div class="drama-card is-active" onclick="window.location='drama.html'">
-      <img class="card-img" src="assets/lizhi/poster1.png" alt="疯狂的荔枝">
+      <img class="card-img" src="{{lizhiPoster1}}" alt="疯狂的荔枝">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-live">已上线</span>
@@ -37,56 +39,56 @@
     </div>
 
     <div class="drama-card">
-      <img class="card-img" src="assets/upcoming/cover-01.png" alt="风临深宫">
+      <img class="card-img" src="{{upcomingCover01}}" alt="第七码头">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-soon">即将上线</span>
-        <div class="card-title-cn">风临深宫</div>
-        <div class="card-title-en">Phoenix Palace</div>
+        <div class="card-title-cn">第七码头</div>
+        <div class="card-title-en">Pier No. 7</div>
         <span class="card-cta disabled">敬请期待</span>
       </div>
     </div>
 
     <div class="drama-card">
-      <img class="card-img" src="assets/upcoming/cover-02.png" alt="一剑问情">
+      <img class="card-img" src="{{upcomingCover02}}" alt="雪落关山">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-soon">即将上线</span>
-        <div class="card-title-cn">一剑问情</div>
-        <div class="card-title-en">A Sword of Love</div>
+        <div class="card-title-cn">雪落关山</div>
+        <div class="card-title-en">Snow Falls Beyond the Pass</div>
         <span class="card-cta disabled">敬请期待</span>
       </div>
     </div>
 
     <div class="drama-card">
-      <img class="card-img" src="assets/upcoming/cover-03.png" alt="神医嫡女">
+      <img class="card-img" src="{{upcomingCover03}}" alt="港城无声">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-soon">即将上线</span>
-        <div class="card-title-cn">神医嫡女</div>
-        <div class="card-title-en">The Divine Healer</div>
+        <div class="card-title-cn">港城无声</div>
+        <div class="card-title-en">Silent Harbor</div>
         <span class="card-cta disabled">敬请期待</span>
       </div>
     </div>
 
     <div class="drama-card">
-      <img class="card-img" src="assets/upcoming/cover-04.png" alt="总裁的危险偏爱">
+      <img class="card-img" src="{{upcomingCover04}}" alt="长安夜雨">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-soon">即将上线</span>
-        <div class="card-title-cn">总裁的危险偏爱</div>
-        <div class="card-title-en">Dangerous Obsession</div>
+        <div class="card-title-cn">长安夜雨</div>
+        <div class="card-title-en">Rain Over Chang'an</div>
         <span class="card-cta disabled">敬请期待</span>
       </div>
     </div>
 
     <div class="drama-card">
-      <img class="card-img" src="assets/upcoming/cover-05.png" alt="重生后我手撕渣男">
+      <img class="card-img" src="{{upcomingCover05}}" alt="天台来信">
       <div class="card-overlay"></div>
       <div class="card-info">
         <span class="card-tag tag-soon">即将上线</span>
-        <div class="card-title-cn">重生后我手撕渣男</div>
-        <div class="card-title-en">Reborn &amp; Ruthless</div>
+        <div class="card-title-cn">天台来信</div>
+        <div class="card-title-en">Letters from the Rooftop</div>
         <span class="card-cta disabled">敬请期待</span>
       </div>
     </div>
@@ -95,9 +97,11 @@
 
   <footer class="site-footer">
     <span class="footer-text">© 2026 深圳市方直智胜科技有限公司</span>
-    <span class="footer-text">粤ICP备XXXXXXXX号</span>
+    <span class="footer-text">粤ICP备2026044251号</span>
   </footer>
 
+  {{APP_CONFIG_SCRIPT}}
   <script src="js/main.js"></script>
 </body>
+
 </html>

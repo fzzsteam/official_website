@@ -5,9 +5,12 @@
 :root {
   --bg: #1C1917;
   --card-bg: #272320;
+  --surface-soft: rgba(255, 248, 240, 0.08);
   --text-primary: #F0EDE8;
-  --text-muted: rgba(240,237,232,0.45);
+  --text-muted: rgba(240,237,232,0.58);
   --accent-gold: #C9912A;
+  --accent-rose: #8f3a33;
+  --accent-amber: #d8a24d;
   --card-transition: 0.52s cubic-bezier(0.4, 0, 0.2, 1);
   --font-display: 'ZCOOL QingKe HuangYou', serif;
   --font-body: 'Noto Sans SC', sans-serif;
@@ -16,11 +19,39 @@
 
 html, body {
   height: 100%;
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, rgba(46, 35, 28, 0.18), rgba(24, 18, 15, 0.28)),
+    linear-gradient(135deg, #3b3028 0%, #4a3a2f 20%, #5b4738 46%, #3e3127 72%, #241d19 100%);
   color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top center, rgba(255, 247, 231, 0.08) 0%, rgba(255, 247, 231, 0.02) 24%, rgba(255, 247, 231, 0) 52%),
+    linear-gradient(90deg, rgba(101, 72, 48, 0.12) 0%, rgba(101, 72, 48, 0.05) 16%, rgba(101, 72, 48, 0) 34%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 250, 239, 0.018) 0,
+      rgba(255, 250, 239, 0.018) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      rgba(71, 54, 42, 0.05) 0,
+      rgba(71, 54, 42, 0.05) 2px,
+      transparent 2px,
+      transparent 9px
+    );
+  opacity: 0.72;
+  z-index: 0;
 }
 
 /* ─── Custom Cursor ────────────────────────────────── */
@@ -105,6 +136,7 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
 
 /* ─── Expanding Cards (Homepage) ──────────────────── */
 .cards-section {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100vh;
@@ -114,15 +146,34 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   overflow: hidden;
 }
 
+.cards-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(38, 28, 21, 0.08), rgba(24, 18, 15, 0.22)),
+    linear-gradient(90deg, rgba(201, 145, 42, 0.025), rgba(201, 145, 42, 0) 18%, rgba(201, 145, 42, 0) 82%, rgba(201, 145, 42, 0.02));
+  opacity: 0.9;
+  pointer-events: none;
+}
+
 .drama-card {
   flex: 1;
   height: 64vh;
   position: relative;
   overflow: hidden;
   cursor: none;
-  background: var(--card-bg);
-  /* Only flex transitions — CSS animates numeric flex-grow perfectly */
-  transition: flex 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  isolation: isolate;
+  border: 1px solid rgba(255, 248, 240, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.16)),
+    var(--card-bg);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  transition:
+    flex 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.45s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 /* Stagger: offset odd/even cards around the vertical center */
@@ -135,30 +186,43 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 58%;
+  filter: saturate(0.72) brightness(0.88) contrast(1.02);
+  transform: scale(1.03);
+  transition: filter 0.5s ease, transform 0.6s ease, object-position 0.6s ease;
+}
+
+.drama-card:first-child .card-img {
   object-position: center 20%;
-  filter: grayscale(100%) brightness(0.82);
-  transition: filter 0.5s ease;
 }
 
 .drama-card.is-active .card-img {
-  filter: grayscale(0%) brightness(1);
+  object-position: center 72%;
+  filter: saturate(1) brightness(1) contrast(1.06);
+  transform: scale(1.01);
+}
+
+.drama-card:first-child.is-active .card-img {
+  object-position: center 20%;
 }
 
 .drama-card .card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10,8,5,0.85) 0%, rgba(10,8,5,0.1) 50%, transparent 75%);
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  background:
+    linear-gradient(to top, rgba(10, 8, 5, 0.9) 0%, rgba(10, 8, 5, 0.28) 44%, transparent 76%),
+    linear-gradient(180deg, rgba(201, 145, 42, 0.12) 0%, rgba(201, 145, 42, 0) 34%);
+  opacity: 0.82;
+  transition: opacity 0.5s ease, background 0.5s ease;
 }
 
 .drama-card .card-info {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 28px 20px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+  padding: 28px 20px 24px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 /* ── Card text elements ── */
@@ -173,7 +237,11 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   font-family: var(--font-cormorant);
 }
 .tag-live { background: var(--accent-gold); color: #0a0a08; font-weight: 600; }
-.tag-soon { background: rgba(255,255,255,0.12); color: rgba(240,236,228,0.7); border: 1px solid rgba(255,255,255,0.2); }
+.tag-soon {
+  background: rgba(255,255,255,0.12);
+  color: rgba(240,236,228,0.82);
+  border: 1px solid rgba(255,255,255,0.22);
+}
 
 .card-title-cn {
   font-family: var(--font-display);
@@ -188,7 +256,7 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
 .card-title-en {
   font-family: var(--font-cormorant);
   font-size: 13px;
-  color: rgba(240,236,228,0.55);
+  color: rgba(240,236,228,0.68);
   letter-spacing: 0.28em;
   font-style: italic;
   margin-bottom: 18px;
@@ -202,23 +270,74 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   color: var(--accent-gold);
   font-family: var(--font-cormorant);
   text-decoration: none;
-  border-bottom: 1px solid rgba(122,92,30,0.5);
+  border-bottom: 1px solid rgba(201,145,42,0.5);
   padding-bottom: 2px;
   font-weight: 500;
   cursor: none;
-  transition: letter-spacing 0.3s ease;
+  opacity: 0.28;
+  transition: letter-spacing 0.3s ease, opacity 0.3s ease, color 0.3s ease;
 }
 .card-cta:hover { letter-spacing: 0.28em; }
-.card-cta.disabled { color: rgba(240,236,228,0.4); border-color: rgba(240,236,228,0.15); pointer-events: none; }
+.card-cta.disabled {
+  color: rgba(240,236,228,0.52);
+  border-color: rgba(240,236,228,0.18);
+  opacity: 0.72;
+  pointer-events: none;
+}
 
 /* ── Active state: pure flex expansion ── */
 .drama-card.is-active {
   flex: 4;
+  transform: translateY(-8px);
+  border-color: rgba(201, 145, 42, 0.42);
+  box-shadow: 0 34px 78px rgba(0, 0, 0, 0.42);
 }
 
-.drama-card.is-active img          { filter: grayscale(0%) brightness(1); }
-.drama-card.is-active .card-overlay { opacity: 1; }
-.drama-card.is-active .card-info   { opacity: 1; transform: translateY(0); }
+.drama-card:not(.is-active) .card-title-cn {
+  font-size: 22px;
+}
+
+.drama-card:not(.is-active) .card-title-en {
+  letter-spacing: 0.2em;
+  margin-bottom: 10px;
+}
+
+.drama-card:not(.is-active) .card-info {
+  padding-bottom: 20px;
+}
+
+.drama-card:not(.is-active) .card-overlay {
+  opacity: 0.72;
+}
+
+.drama-card.is-active .card-overlay {
+  opacity: 1;
+}
+
+.drama-card.is-active .card-info {
+  transform: translateY(0);
+}
+
+.drama-card.is-active .card-cta {
+  opacity: 1;
+}
+
+.drama-card:hover {
+  border-color: rgba(255, 248, 240, 0.24);
+}
+
+.drama-card:hover:not(.is-active) .card-img {
+  object-position: center 66%;
+  filter: saturate(0.86) brightness(0.94) contrast(1.04);
+}
+
+.drama-card:first-child:hover:not(.is-active) .card-img {
+  object-position: center 20%;
+}
+
+.drama-card:hover:not(.is-active) .card-cta {
+  opacity: 0.72;
+}
 
 /* ─── Footer ───────────────────────────────────────── */
 .site-footer {
@@ -521,12 +640,16 @@ body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: var(--
   .navbar-links { gap: 20px; }
   .navbar-links a { font-size: 11px; }
 
-  .cards-section { flex-direction: column; height: auto; min-height: 100vh; }
-  .drama-card { flex: none !important; height: 200px; }
+  .cards-section { flex-direction: column; height: auto; min-height: 100vh; padding: 96px 20px 84px; }
+  .cards-section::before { inset: 5% 0 10%; }
+  .drama-card { flex: none !important; height: 220px; width: 100%; }
+  .drama-card:nth-child(odd),
+  .drama-card:nth-child(even) { margin-top: 0; }
   .drama-card.is-active { height: 360px !important; }
   .drama-card .card-info { opacity: 1; transform: translateY(0); }
   .drama-card .card-overlay { opacity: 1; }
-  .drama-card img { filter: brightness(0.55) saturate(0.85); }
+  .drama-card img { object-position: center 60%; filter: brightness(0.78) saturate(0.92); transform: none; }
+  .drama-card:first-child img { object-position: center 20%; }
 
   .drama-hero-content { left: 24px; bottom: 48px; }
   .drama-section { padding: 48px 24px; }

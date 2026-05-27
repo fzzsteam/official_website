@@ -4,9 +4,9 @@
 
 | 文件名 | 说明 |
 |---|---|
-| `cover.png` | 视频封面（Hero 背景） |
-| `poster1.png` | 首页卡片海报 |
-| `poster2.png` | 详情页简介海报 |
+| `cover.jpg` | 视频封面（Hero 背景） |
+| `poster1.jpg` | 首页卡片海报 |
+| `poster2.jpg` | 详情页简介海报 |
 | `trailer.mp4` | 预告片视频 |
 | `char-liuchengy.jpg` | 角色图：柳承业 |
 | `char-sulingwei.jpg` | 角色图：苏凌薇 |

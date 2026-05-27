@@ -6,7 +6,7 @@
   <title>疯狂的荔枝 — 方直智胜科技</title>
   <meta name="description" content="《疯狂的荔枝》— 一颗荔枝，一场疯狂。方直智胜 AI 短剧代表作。">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260527c">
 </head>
 <body>
 
@@ -30,8 +30,8 @@
 
   <!-- Hero -->
   <section class="drama-hero">
-    <video autoplay muted loop playsinline poster="assets/lizhi/cover.png">
-      <source src="assets/lizhi/trailer.mp4" type="video/mp4">
+    <video autoplay muted loop playsinline poster="{{lizhiCover}}">
+      <source src="{{lizhiTrailer}}" type="video/mp4">
     </video>
     <div class="drama-hero-overlay"></div>
     <div class="drama-hero-content">
@@ -47,7 +47,7 @@
   <!-- Plot -->
   <section class="drama-section">
     <div class="drama-plot">
-      <img src="assets/lizhi/poster2.png" alt="疯狂的荔枝海报" class="drama-plot-poster">
+      <img src="{{lizhiPoster2}}" alt="疯狂的荔枝海报" class="drama-plot-poster">
       <div class="drama-plot-text">
         <div class="section-title">剧情简介</div>
         <p class="section-body">
@@ -62,27 +62,27 @@
     <div class="section-title" style="margin-bottom: 32px;">角色介绍</div>
     <div class="characters-grid">
       <div class="char-card">
-        <img src="assets/lizhi/char-liuchengy.jpg" alt="柳承业">
+        <img src="{{lizhiCharLiuchengy}}" alt="柳承业">
         <div class="char-name">柳承业</div>
         <div class="char-role">御史 · 押运使</div>
       </div>
       <div class="char-card">
-        <img src="assets/lizhi/char-sulingwei.jpg" alt="苏凌薇">
+        <img src="{{lizhiCharSulingwei}}" alt="苏凌薇">
         <div class="char-name">苏凌薇</div>
         <div class="char-role">侠女 · 神秘人</div>
       </div>
       <div class="char-card">
-        <img src="assets/lizhi/char-qinlie.jpg" alt="秦烈">
+        <img src="{{lizhiCharQinlie}}" alt="秦烈">
         <div class="char-name">秦烈</div>
         <div class="char-role">江湖客 · 幕后黑手</div>
       </div>
       <div class="char-card">
-        <img src="assets/lizhi/char-shitou.jpg" alt="石头">
+        <img src="{{lizhiCharShitou}}" alt="石头">
         <div class="char-name">石头</div>
         <div class="char-role">书生 · 意外卷入</div>
       </div>
       <div class="char-card">
-        <img src="assets/lizhi/char-shenmo.jpg" alt="沈默">
+        <img src="{{lizhiCharShenmo}}" alt="沈默">
         <div class="char-name">沈默</div>
         <div class="char-role">暗卫 · 护送人</div>
       </div>
@@ -91,17 +91,18 @@
 
   <div class="inner-footer">
     <span class="footer-text">© 2026 深圳市方直智胜科技有限公司</span>
-    <span class="footer-text">粤ICP备XXXXXXXX号</span>
+    <span class="footer-text">粤ICP备2026044251号</span>
   </div>
 
   <!-- Video Modal -->
   <div class="video-modal" id="videoModal">
     <button class="modal-close" id="closeModal">✕</button>
     <video controls id="modalVideo">
-      <source src="assets/lizhi/trailer.mp4" type="video/mp4">
+      <source src="{{lizhiTrailer}}" type="video/mp4">
     </video>
   </div>
 
+  {{APP_CONFIG_SCRIPT}}
   <script src="js/main.js"></script>
   <script src="js/drama.js"></script>
 </body>
