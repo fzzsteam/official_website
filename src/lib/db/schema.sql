@@ -3,7 +3,7 @@ CREATE TABLE users (
   phone VARCHAR(32) NOT NULL,
   nickname VARCHAR(100) NULL,
   avatar_path VARCHAR(255) NULL,
-  membership_expires_at DATETIME(3) NULL,
+  vip_expired_at DATETIME(3) NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'active',
   last_login_at DATETIME(3) NULL,
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

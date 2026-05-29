@@ -7,11 +7,11 @@ import { query } from '@/lib/db/client';
 interface UserRow {
   id: string;
   phone: string;
-  membership_expires_at: Date | string | null;
+  vip_expired_at: Date | string | null;
 }
 
-function isVipActive(membershipExpiresAt: Date | string | null) {
-  return membershipExpiresAt ? new Date(membershipExpiresAt).getTime() > Date.now() : false;
+function isVipActive(vipExpiredAt: Date | string | null) {
+  return vipExpiredAt ? new Date(vipExpiredAt).getTime() > Date.now() : false;
 }
 
 export async function POST(request: Request) {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     let users = await query<UserRow>(
-      `SELECT id, phone, membership_expires_at
+      `SELECT id, phone, vip_expired_at
        FROM users
        WHERE phone = :phone
        LIMIT 1`,
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       );
 
       users = await query<UserRow>(
-        `SELECT id, phone, membership_expires_at
+        `SELECT id, phone, vip_expired_at
          FROM users
          WHERE id = :id
          LIMIT 1`,
@@ -76,9 +76,9 @@ export async function POST(request: Request) {
       user: {
         id: user.id,
         phone: user.phone,
-        isVip: isVipActive(user.membership_expires_at),
-        membershipExpiresAt: user.membership_expires_at
-          ? new Date(user.membership_expires_at).toISOString()
+        isVip: isVipActive(user.vip_expired_at),
+        vipExpiredAt: user.vip_expired_at
+          ? new Date(user.vip_expired_at).toISOString()
           : null,
       },
     });
