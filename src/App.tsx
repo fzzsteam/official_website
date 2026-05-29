@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { useApp } from './context/AppContext';
 import Navbar from './components/episode-detail/Navbar';
 import HomePage from './components/HomePage';
 import EpisodeDetailPage from './components/episode-detail';
@@ -40,10 +40,6 @@ const AppShell: React.FC = () => {
   );
 };
 
-const App: React.FC = () => (
-  <AppProvider>
-    <AppShell />
-  </AppProvider>
-);
+const App: React.FC = () => <AppShell />;
 
 export default App;

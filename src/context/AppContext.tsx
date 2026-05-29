@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Drama } from '../types/drama';
+import { mockDrama } from '../data/mockData';
 
 export type ModalType = 'none' | 'login' | 'vip' | 'payment';
 export type PageType = 'home' | 'episode-detail' | 'about' | 'business' | 'contact';
@@ -41,14 +42,30 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 const DEMO_USER: User = { phone: '183****5627', isVip: false };
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>({
-    page: 'home',
+interface AppProviderProps {
+  children: React.ReactNode;
+  initialDramaId?: string;
+}
+
+function getInitialDrama(initialDramaId?: string): Drama | null {
+  if (!initialDramaId) {
+    return null;
+  }
+
+  return {
+    ...mockDrama,
+    id: initialDramaId,
+  };
+}
+
+export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDramaId }) => {
+  const [state, setState] = useState<AppState>(() => ({
+    page: initialDramaId ? 'episode-detail' : 'home',
     modal: 'none',
     user: DEMO_USER,
-    selectedDrama: null,
+    selectedDrama: getInitialDrama(initialDramaId),
     selectedPlan: null,
-  });
+  }));
 
   const navigateTo = useCallback((page: PageType, drama?: Drama) => {
     setState((s) => ({

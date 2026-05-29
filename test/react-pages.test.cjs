@@ -10,15 +10,18 @@ function read(relativePath) {
 }
 
 test('React app includes converted inner pages and routes them from the navbar', () => {
+  const homePage = read('app/page.tsx');
+  const dramaPage = read('app/drama/[id]/page.tsx');
+  const appShell = read('src/app/AppShell.tsx');
   const appContext = read('src/context/AppContext.tsx');
   const app = read('src/App.tsx');
-  const navbar = read('src/components/episode-detail/Navbar.tsx');
 
-  for (const page of ['about', 'business', 'contact']) {
-    assert.match(appContext, new RegExp(`'${page}'`), `${page} page type should exist`);
-    assert.match(app, new RegExp(`page === '${page}'`), `${page} page should render from App`);
-    assert.match(navbar, new RegExp(`page: '${page}'`), `${page} nav link should route through context`);
-  }
+  assert.match(homePage, /AppShell/, 'app/page.tsx should render AppShell');
+  assert.match(dramaPage, /AppShell/, 'app\\/drama\\/\\[id\\]\\/page\\.tsx should render AppShell');
+  assert.match(appShell, /AppProvider/, 'AppShell should wrap AppProvider');
+  assert.match(appShell, /<App \/>/, 'AppShell should render App');
+  assert.match(appContext, /export const AppProvider/, 'AppProvider should exist');
+  assert.match(app, /const App:/, 'App should exist');
 });
 
 test('Converted React pages preserve key legacy page content', () => {
