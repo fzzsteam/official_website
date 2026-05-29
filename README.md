@@ -8,7 +8,6 @@
 
 - `index.html`：Vite HTML 入口
 - `src/`：React 页面、组件、状态和类型
-- `assets/`：素材说明文件
 - `test/`：React 页面迁移与路由测试
 
 ## 本地运行
