@@ -5,26 +5,31 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 
-function readJson(relativePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'));
+function readPackageJson() {
+  return JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 }
 
-function readText(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+function readNextConfig() {
+  return fs.readFileSync(path.join(root, 'next.config.mjs'), 'utf8');
 }
 
-test('package.json uses Next.js tooling scripts and dependency', () => {
-  const pkg = readJson('package.json');
+test('package.json scripts use Next.js tooling', () => {
+  const packageJson = readPackageJson();
 
-  assert.equal(pkg.scripts.dev, 'next dev');
-  assert.equal(pkg.scripts.build, 'next build');
-  assert.equal(pkg.scripts.start, 'node .next/standalone/server.js');
-  assert.equal(pkg.scripts.test, 'node --test test/*.test.cjs');
-  assert.ok(pkg.dependencies.next, 'next dependency should exist');
+  assert.equal(packageJson.scripts.dev, 'next dev');
+  assert.equal(packageJson.scripts.build, 'next build');
+  assert.equal(packageJson.scripts.start, 'node .next/standalone/server.js');
+  assert.equal(packageJson.scripts.test, 'node --test test/*.test.cjs');
 });
 
-test('next.config.mjs enables standalone output', () => {
-  const nextConfig = readText('next.config.mjs');
+test('package.json includes next dependency', () => {
+  const packageJson = readPackageJson();
+
+  assert.ok(packageJson.dependencies.next);
+});
+
+test('next.config.mjs uses standalone output', () => {
+  const nextConfig = readNextConfig();
 
   assert.match(nextConfig, /output:\s*['"]standalone['"]/);
 });
