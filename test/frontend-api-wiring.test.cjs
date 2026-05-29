@@ -42,3 +42,9 @@ test('HomePage fetches drama list from API instead of hardcoded data', () => {
   assert.match(source, /\/api\/dramas/, 'should fetch from /api/dramas');
   assert.doesNotMatch(source, /const heroDramas\s*=\s*\[/, 'should not have hardcoded heroDramas array');
 });
+
+test('App fetches drama detail for cast and recommendations', () => {
+  const source = read('src/App.tsx');
+  assert.match(source, /\/api\/dramas/, 'App should fetch from /api/dramas');
+  assert.doesNotMatch(source, /mockCast|mockRecommendations/, 'App should not use mock data');
+});
