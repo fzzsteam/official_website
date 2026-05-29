@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import type { ModalType, PageType } from '../../context/AppContext';
 import { tokens } from './tokens';
 import UserDropdown from '../UserDropdown';
 
@@ -35,13 +36,13 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-const navLinks = [
-  { label: '首页', href: '#', page: 'home' },
-  { label: '短剧', href: '#', page: 'episode-detail' },
-  { label: '会员中心', href: '#', page: 'vip' },
-  { label: '关于我们', href: '#' },
-  { label: '业务介绍', href: '#' },
-  { label: '联系我们', href: '#' },
+const navLinks: Array<{ label: string; page?: PageType; modal?: Exclude<ModalType, 'none'> }> = [
+  { label: '首页', page: 'home' },
+  { label: '短剧', page: 'home' },
+  { label: '会员中心', modal: 'vip' },
+  { label: '关于我们', page: 'about' },
+  { label: '业务介绍', page: 'business' },
+  { label: '联系我们', page: 'contact' },
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
@@ -49,7 +50,11 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleNavClick = (link: typeof navLinks[0]) => {
-    if (link.page === 'home') navigateTo('home');
+    if (link.modal) {
+      openModal(link.modal);
+      return;
+    }
+    if (link.page) navigateTo(link.page);
   };
 
   return (
@@ -94,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
                 fontFamily: tokens.fontBody,
                 fontSize: 12, fontWeight: 300,
                 letterSpacing: '0.12em',
-                color: (link.page === 'home' && page === 'home') || (link.page === 'episode-detail' && page === 'episode-detail')
+                color: (link.label === '短剧' ? page === 'episode-detail' : link.page === page)
                   ? tokens.textPrimary
                   : tokens.textMuted,
                 background: 'none', border: 'none',

@@ -3,6 +3,9 @@ import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/episode-detail/Navbar';
 import HomePage from './components/HomePage';
 import EpisodeDetailPage from './components/episode-detail';
+import AboutPage from './components/pages/AboutPage';
+import BusinessPage from './components/pages/BusinessPage';
+import ContactPage from './components/pages/ContactPage';
 import LoginModal from './components/LoginModal';
 import VipModal from './components/VipModal';
 import PaymentModal from './components/PaymentModal';
@@ -17,6 +20,9 @@ const AppShell: React.FC = () => {
 
       {/* Pages */}
       {page === 'home' && <HomePage />}
+      {page === 'about' && <AboutPage />}
+      {page === 'business' && <BusinessPage />}
+      {page === 'contact' && <ContactPage />}
       {page === 'episode-detail' && selectedDrama && (
         <EpisodeDetailPage
           drama={selectedDrama}

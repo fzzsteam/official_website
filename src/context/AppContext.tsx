@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Drama } from '../types/drama';
 
 export type ModalType = 'none' | 'login' | 'vip' | 'payment';
-export type PageType = 'home' | 'episode-detail';
+export type PageType = 'home' | 'episode-detail' | 'about' | 'business' | 'contact';
 
 export interface VipPlan {
   id: string;
@@ -51,7 +51,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const navigateTo = useCallback((page: PageType, drama?: Drama) => {
-    setState((s) => ({ ...s, page, selectedDrama: drama ?? s.selectedDrama }));
+    setState((s) => ({
+      ...s,
+      page,
+      selectedDrama: page === 'episode-detail' ? (drama ?? s.selectedDrama) : null,
+    }));
   }, []);
 
   const openModal = useCallback((modal: ModalType) => {
