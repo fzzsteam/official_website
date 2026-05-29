@@ -36,3 +36,9 @@ test('VideoPlayer wiring fetches episode play url', () => {
 
   assert.match(combined, /play-url/);
 });
+
+test('HomePage fetches drama list from API instead of hardcoded data', () => {
+  const source = read('src/components/HomePage.tsx');
+  assert.match(source, /\/api\/dramas/, 'should fetch from /api/dramas');
+  assert.doesNotMatch(source, /const heroDramas\s*=\s*\[/, 'should not have hardcoded heroDramas array');
+});
