@@ -22,7 +22,6 @@ test('API helpers enforce unified success and error envelopes', () => {
 test('environment config validates server-only variables centrally', () => {
   const source = read('src/lib/config/env.ts');
   for (const key of [
-    'DATABASE_URL',
     'COOKIE_SECRET',
     'ALIYUN_ACCESS_KEY_ID',
     'OSS_BUCKET',

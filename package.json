@@ -9,6 +9,9 @@
     "start": "node .next/standalone/server.js",
     "test": "node --test test/*.test.cjs"
   },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "dependencies": {
     "@alicloud/dysmsapi20170525": "^3.1.1",
     "@alicloud/openapi-client": "^0.4.15",
@@ -16,7 +19,6 @@
     "ali-oss": "^6.22.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
-    "mysql2": "^3.11.5",
     "next": "^14.2.18",
     "prisma": "^7.8.0",
     "qrcode.react": "^4.2.0",
@@ -29,6 +31,7 @@
     "@types/node": "^20.17.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
   }
 }

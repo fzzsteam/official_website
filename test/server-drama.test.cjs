@@ -13,8 +13,8 @@ test('drama service exposes play url authorization flow', () => {
   const source = read('src/lib/drama/drama-service.ts');
 
   assert.match(source, /getEpisodePlayUrl/);
-  assert.match(source, /is_free/);
-  assert.match(source, /vip_expired_at/);
+  assert.match(source, /accessLevel/);
+  assert.match(source, /vipExpiredAt/);
   assert.match(source, /signOssPath/);
 });
 

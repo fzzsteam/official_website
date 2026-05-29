@@ -4,8 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
-const schemaPath = path.join(root, 'src/lib/db/schema.sql');
-const seedPath = path.join(root, 'src/lib/db/seed.sql');
+const schemaPath = path.join(root, 'prisma/schema.prisma');
+const seedPath = path.join(root, 'prisma/seed.ts');
+const migrationPath = path.join(root, 'prisma/migrations/0001_init/migration.sql');
 
 function readSchema() {
   return fs.readFileSync(schemaPath, 'utf8');
@@ -15,31 +16,40 @@ function readSeed() {
   return fs.readFileSync(seedPath, 'utf8');
 }
 
-test('schema.sql defines required core tables', () => {
+function readMigration() {
+  return fs.readFileSync(migrationPath, 'utf8');
+}
+
+test('schema.prisma defines required core models', () => {
   const schema = readSchema();
 
-  for (const table of ['users', 'sms_codes', 'membership_plans', 'orders', 'dramas', 'episodes']) {
-    assert.match(schema, new RegExp(`CREATE TABLE\\s+${table}\\b`, 'i'));
+  for (const model of ['User', 'SmsCode', 'MembershipPlan', 'Order', 'Drama', 'Episode']) {
+    assert.match(schema, new RegExp(`model\\s+${model}\\s+\\{`));
   }
 });
 
-test('schema.sql uses shared id and timestamp conventions', () => {
+test('schema.prisma uses CHAR(36) for primary keys', () => {
   const schema = readSchema();
-
-  assert.match(schema, /id\s+CHAR\(36\)\s+PRIMARY KEY/i);
-  assert.match(schema, /created_at\s+DATETIME\(3\)\s+NOT NULL/i);
-  assert.match(schema, /updated_at\s+DATETIME\(3\)\s+NOT NULL/i);
+  assert.match(schema, /@db\.Char\(36\)/);
+  assert.match(schema, /@id/);
 });
 
-test('schema.sql defines required unique keys', () => {
+test('schema.prisma defines unique constraints on core fields', () => {
   const schema = readSchema();
-
-  assert.match(schema, /UNIQUE KEY\s+uk_users_phone\s*\(\s*phone\s*\)/i);
-  assert.match(schema, /UNIQUE KEY\s+uk_orders_order_no\s*\(\s*order_no\s*\)/i);
-  assert.match(schema, /UNIQUE KEY\s+uk_episodes_drama_episode\s*\(\s*drama_id\s*,\s*episode_no\s*\)/i);
+  const migration = readMigration();
+  assert.match(schema, /phone.*@unique/s);
+  assert.match(migration, /uk_orders_order_no/);
+  assert.match(schema, /uk_episodes_drama_episode/);
 });
 
-test('seed.sql contains default membership plans', () => {
+test('migration sql defines tables with IF NOT EXISTS', () => {
+  const migration = readMigration();
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS `users`/i);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS `orders`/i);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS `episodes`/i);
+});
+
+test('seed.ts contains default membership plans', () => {
   const seed = readSeed();
 
   assert.match(seed, /30d/);

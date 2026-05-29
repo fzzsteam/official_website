@@ -14,7 +14,7 @@ test('sms code helper stores hashed codes with expiration and consumption tracki
 
   assert.match(source, /bcrypt/);
   assert.match(source, /expiresAt/);
-  assert.match(source, /consumed_at/);
+  assert.match(source, /consumedAt/);
 });
 
 test('session helper configures secure httpOnly cookie defaults', () => {
