@@ -79,6 +79,56 @@ src/
 
 Cookie 过期时间建议 30 天。用户退出登录时清除 Cookie。
 
+## 规范约定
+
+### 数据库规范
+
+- 所有业务表主键统一使用 UUID 字符串，字段名为 `id`。
+- 所有业务表必须包含 `created_at` 和 `updated_at`，短信验证码、支付通知等只追加不更新的日志表也保留 `updated_at`，保持表结构一致。
+- 时间字段统一使用 UTC 存储，接口返回 ISO 8601 字符串，前端按用户时区展示。
+- 金额统一使用整数分，字段名使用 `*_cents`，禁止使用浮点数存金额。
+- OSS 资源字段只存 path，字段名使用 `*_path`，禁止存签名 URL 或公开 URL。
+- 状态字段使用小写枚举字符串，例如 `pending`、`paid`、`closed`。
+- 外键字段使用 `{entity}_id` 命名，例如 `user_id`、`drama_id`、`plan_id`。
+- 可软删除的数据预留 `deleted_at`；一期短剧、剧集、演员和推荐先通过 `is_published` 控制上下架，不使用软删除。
+- 数据库字段使用 `snake_case`；TypeScript 对象使用 `camelCase`，由数据访问层转换。
+- 手机号字段需要唯一索引：`users.phone`。
+- 订单号需要唯一索引：`orders.order_no`。
+- 剧集需要唯一约束：`episodes(drama_id, episode_no)`。
+- 会员套餐 code 需要唯一索引：`membership_plans.code`。
+
+### 代码规范
+
+- 全项目使用 TypeScript，禁止新增 JavaScript 业务文件。
+- React 组件文件使用 `PascalCase.tsx`；普通工具和服务文件使用 `kebab-case.ts` 或现有目录约定，保持同一目录内一致。
+- 服务端业务逻辑放在 `src/lib/**`，API route 只负责解析请求、调用服务、返回响应。
+- 服务端模块按领域拆分：`auth`、`sms`、`payment`、`oss`、`membership`、`drama`、`db`。
+- 不在 React 组件里直接拼接业务 API 细节；复杂请求封装到客户端 API helper。
+- 环境变量通过集中配置模块读取和校验，业务代码不直接散落读取 `process.env`。
+- 服务端密钥只允许在 server-only 模块读取，不允许使用 `NEXT_PUBLIC_` 前缀。
+- API 入参必须做服务端校验；前端校验只作为交互优化。
+- 错误返回统一格式：
+
+```json
+{
+  "error": {
+    "code": "AUTH_REQUIRED",
+    "message": "请先登录"
+  }
+}
+```
+
+- 成功返回统一格式：
+
+```json
+{
+  "data": {}
+}
+```
+
+- 日志中禁止输出短信验证码、Cookie、微信支付密钥、OSS AccessKey、签名 URL 全量内容。
+- 新增共享逻辑必须有单元测试，支付回调、会员有效期、验证码校验必须覆盖边界场景。
+
 ## 数据模型
 
 ### 用户与短信
@@ -102,6 +152,7 @@ sms_codes
   consumed_at
   request_ip
   created_at
+  updated_at
 ```
 
 `vip_expired_at > NOW()` 表示会员有效。验证码只存 hash，不存明文。
@@ -117,6 +168,8 @@ membership_plans
   price_cents
   enabled
   sort_order
+  created_at
+  updated_at
 
 orders
   id
@@ -139,6 +192,7 @@ wechat_payment_notifications
   raw_payload
   processed_at
   created_at
+  updated_at
 ```
 
 订单状态：`pending`、`paid`、`closed`。一期只支持 `wechat_native`。
@@ -180,6 +234,8 @@ drama_genres
   id
   drama_id
   genre
+  created_at
+  updated_at
 
 episodes
   id
@@ -208,6 +264,8 @@ recommendations
   source_drama_id
   target_drama_id
   sort_order
+  created_at
+  updated_at
 ```
 
 播放权限以 `episodes.is_free` 为准：
