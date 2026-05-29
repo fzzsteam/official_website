@@ -33,3 +33,32 @@ export interface RecommendedDrama {
   title: string;
   coverUrl: string;
 }
+
+// API response types — what the server returns to client components
+export interface ApiDrama {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  synopsis: string | null;
+  coverUrl: string;
+  posterUrl: string | null;
+  releaseStatus: string;
+  sortOrder: number;
+  totalEpisodes: number;
+  genreNames: string[];
+}
+
+export interface ApiDramaDetail extends ApiDrama {
+  cast: Array<{
+    id: string;
+    name: string;
+    roleName: string | null;
+    avatarUrl: string | null;
+  }>;
+  recommendations: Array<{
+    id: string;
+    title: string;
+    coverUrl: string;
+  }>;
+}
