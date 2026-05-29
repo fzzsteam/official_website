@@ -10,12 +10,15 @@ export interface PublishedDrama {
   subtitle: string | null;
   synopsis: string | null;
   coverPath: string;
+  coverUrl: string;
   posterPath: string | null;
+  posterUrl: string | null;
   trailerPath: string | null;
   releaseStatus: string;
   publishedAt: string | null;
   sortOrder: number;
   totalEpisodes: number;
+  genreNames: string[];
 }
 
 export interface DramaEpisode {
@@ -38,6 +41,7 @@ export interface DramaDetail extends PublishedDrama {
     name: string;
     roleName: string | null;
     avatarPath: string | null;
+    avatarUrl: string | null;
     sortOrder: number;
   }>;
   episodes: DramaEpisode[];
@@ -46,6 +50,7 @@ export interface DramaDetail extends PublishedDrama {
     slug: string;
     title: string;
     coverPath: string;
+    coverUrl: string;
     sortOrder: number;
   }>;
 }
@@ -103,6 +108,7 @@ export async function getPublishedDramas(): Promise<PublishedDrama[]> {
       _count: {
         select: { episodes: { where: { status: 'published' } } },
       },
+      genres: true,
     },
   });
 
@@ -113,12 +119,15 @@ export async function getPublishedDramas(): Promise<PublishedDrama[]> {
     subtitle: d.subtitle,
     synopsis: d.synopsis,
     coverPath: d.coverPath,
+    coverUrl: signOssPath(d.coverPath),
     posterPath: d.posterPath,
+    posterUrl: d.posterPath ? signOssPath(d.posterPath) : null,
     trailerPath: d.trailerPath,
     releaseStatus: d.releaseStatus,
     publishedAt: toIsoString(d.publishedAt),
     sortOrder: d.sortOrder,
     totalEpisodes: d._count.episodes,
+    genreNames: d.genres.map((g) => g.genreName),
   }));
 }
 
@@ -166,18 +175,22 @@ export async function getDramaDetail(dramaId: string): Promise<DramaDetail> {
     subtitle: drama.subtitle,
     synopsis: drama.synopsis,
     coverPath: drama.coverPath,
+    coverUrl: signOssPath(drama.coverPath),
     posterPath: drama.posterPath,
+    posterUrl: drama.posterPath ? signOssPath(drama.posterPath) : null,
     trailerPath: drama.trailerPath,
     releaseStatus: drama.releaseStatus,
     publishedAt: toIsoString(drama.publishedAt),
     sortOrder: drama.sortOrder,
     totalEpisodes: drama._count.episodes,
+    genreNames: genres.map((g) => g.genreName),
     genres: genres.map((g) => ({ code: g.genreCode, name: g.genreName })),
     cast: cast.map((c) => ({
       id: c.id,
       name: c.name,
       roleName: c.roleName,
       avatarPath: c.avatarPath,
+      avatarUrl: c.avatarPath ? signOssPath(c.avatarPath) : null,
       sortOrder: c.sortOrder,
     })),
     episodes: episodes.map(mapDramaEpisode),
@@ -186,6 +199,7 @@ export async function getDramaDetail(dramaId: string): Promise<DramaDetail> {
       slug: r.drama.slug,
       title: r.drama.title,
       coverPath: r.drama.coverPath,
+      coverUrl: signOssPath(r.drama.coverPath),
       sortOrder: r.sortOrder,
     })),
   };

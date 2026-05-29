@@ -25,3 +25,15 @@ test('oss service signs private paths without public env leakage', () => {
   assert.match(source, /OSS_SIGNED_URL_EXPIRES_SECONDS/);
   assert.doesNotMatch(source, /NEXT_PUBLIC_/);
 });
+
+test('drama service returns signed coverUrl and posterUrl in list', () => {
+  const source = read('src/lib/drama/drama-service.ts');
+  assert.match(source, /coverUrl/);
+  assert.match(source, /posterUrl/);
+  assert.match(source, /genreNames/);
+});
+
+test('drama service signs avatarUrl for cast members', () => {
+  const source = read('src/lib/drama/drama-service.ts');
+  assert.match(source, /avatarUrl/);
+});
