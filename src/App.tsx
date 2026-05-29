@@ -11,7 +11,7 @@ import VipModal from './components/VipModal';
 import PaymentModal from './components/PaymentModal';
 import { mockCast, mockRecommendations } from './data/mockData';
 
-const AppShell: React.FC = () => {
+const AppContent: React.FC = () => {
   const { page, modal, selectedDrama } = useApp();
 
   return (
@@ -40,6 +40,6 @@ const AppShell: React.FC = () => {
   );
 };
 
-const App: React.FC = () => <AppShell />;
+const App: React.FC = () => <AppContent />;
 
 export default App;

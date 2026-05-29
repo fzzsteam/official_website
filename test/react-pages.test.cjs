@@ -21,7 +21,11 @@ test('React app includes converted inner pages and routes them from the navbar',
   assert.match(appShell, /AppProvider/, 'AppShell should wrap AppProvider');
   assert.match(appShell, /<App \/>/, 'AppShell should render App');
   assert.match(appContext, /export const AppProvider/, 'AppProvider should exist');
+  assert.match(appContext, /useEffect/, 'AppProvider should sync when initialDramaId changes');
+  assert.match(appContext, /initialDramaId/, 'AppProvider should read initialDramaId');
   assert.match(app, /const App:/, 'App should exist');
+  assert.doesNotMatch(app, /const AppShell:/, 'src/App.tsx should not define an internal AppShell');
+  assert.match(app, /const AppContent:/, 'src/App.tsx should use a clearer internal component name');
 });
 
 test('Converted React pages preserve key legacy page content', () => {

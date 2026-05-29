@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Drama } from '../types/drama';
 import { mockDrama } from '../data/mockData';
 
@@ -66,6 +66,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDrama
     selectedDrama: getInitialDrama(initialDramaId),
     selectedPlan: null,
   }));
+
+  useEffect(() => {
+    setState((s) => {
+      if (initialDramaId) {
+        return {
+          ...s,
+          page: 'episode-detail',
+          selectedDrama: getInitialDrama(initialDramaId),
+        };
+      }
+
+      if (s.page === 'episode-detail' && s.selectedDrama) {
+        return {
+          ...s,
+          page: 'home',
+          selectedDrama: null,
+        };
+      }
+
+      return s;
+    });
+  }, [initialDramaId]);
 
   const navigateTo = useCallback((page: PageType, drama?: Drama) => {
     setState((s) => ({
