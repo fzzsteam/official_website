@@ -1,13 +1,8 @@
 import { fail, ok } from '@/lib/api/response';
 import { getSessionUserId } from '@/lib/auth/session';
-import { query } from '@/lib/db/client';
+import { prisma } from '@/lib/db/prisma';
 
 export const dynamic = 'force-dynamic';
-
-interface OrderStatusRow {
-  order_no: string;
-  status: 'pending' | 'paid' | 'closed';
-}
 
 export async function GET(request: Request) {
   try {
@@ -24,26 +19,17 @@ export async function GET(request: Request) {
       return fail('INVALID_PARAMS', '缺少订单号', 400);
     }
 
-    const rows = await query<OrderStatusRow>(
-      `SELECT order_no, status
-       FROM orders
-       WHERE order_no = :orderNo
-         AND user_id = :userId
-       LIMIT 1`,
-      {
-        orderNo,
-        userId,
-      },
-    );
-
-    const order = rows[0];
+    const order = await prisma.order.findFirst({
+      where: { orderNo, userId },
+      select: { orderNo: true, status: true },
+    });
 
     if (!order) {
       return fail('ORDER_NOT_FOUND', '订单不存在', 404);
     }
 
     return ok({
-      orderNo: order.order_no,
+      orderNo: order.orderNo,
       status: order.status,
     });
   } catch {

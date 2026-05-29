@@ -2,7 +2,6 @@ import 'server-only';
 import { z } from 'zod';
 
 const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
   COOKIE_SECRET: z.string().min(32),
   ALIYUN_ACCESS_KEY_ID: z.string().min(1),
   ALIYUN_ACCESS_KEY_SECRET: z.string().min(1),

@@ -1,37 +1,13 @@
 import 'server-only';
 
 import { randomUUID } from 'node:crypto';
-import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { getEnv } from '@/lib/config/env';
-import { getPool, query } from '@/lib/db/client';
+import { prisma } from '@/lib/db/prisma';
 import { calculateNextVipExpiry } from '@/lib/membership/membership-service';
 
 const ORDER_STATUS_PENDING = 'pending';
 const ORDER_STATUS_PAID = 'paid';
 const PAYMENT_CHANNEL_WECHAT_NATIVE = 'wechat_native';
-
-interface MembershipPlanRow {
-  id: string;
-  code: string;
-  name: string;
-  duration_days: number;
-  price_cents: number;
-  enabled: number | boolean;
-}
-
-interface OrderRow extends RowDataPacket {
-  id: string;
-  order_no: string;
-  user_id: string;
-  membership_plan_id: string | null;
-  total_cents: number;
-  paid_cents: number;
-  status: string;
-  paid_at: Date | string | null;
-  description: string | null;
-  duration_days: number | null;
-  vip_expired_at: Date | string | null;
-}
 
 interface WechatNotificationPayload {
   orderNo: string;
@@ -60,6 +36,21 @@ export interface WechatNotificationResult {
   alreadyProcessed: boolean;
   transactionId: string;
   vipExpiredAt: string | null;
+}
+
+// 支付回调事务中用于 FOR UPDATE 的原始查询类型
+interface OrderForUpdate {
+  id: string;
+  order_no: string;
+  user_id: string;
+  membership_plan_id: string | null;
+  total_cents: number;
+  paid_cents: number;
+  status: string;
+  paid_at: Date | null;
+  description: string | null;
+  duration_days: number | null;
+  vip_expired_at: Date | null;
 }
 
 function createOrderNo() {
@@ -95,15 +86,9 @@ export async function createWechatNativeOrder(
   userId: string,
   planCode: string,
 ): Promise<WechatNativeOrder> {
-  const plans = await query<MembershipPlanRow>(
-    `SELECT id, code, name, duration_days, price_cents, enabled
-     FROM membership_plans
-     WHERE code = :code AND enabled = 1
-     LIMIT 1`,
-    { code: planCode },
-  );
-
-  const plan = plans[0];
+  const plan = await prisma.membershipPlan.findFirst({
+    where: { code: planCode, enabled: true },
+  });
 
   if (!plan) {
     throw new Error('PLAN_NOT_FOUND');
@@ -112,43 +97,23 @@ export async function createWechatNativeOrder(
   const orderId = randomUUID();
   const orderNo = createOrderNo();
   const description = `${plan.name}会员充值`;
-  const totalCents = plan.price_cents;
+  const totalCents = plan.priceCents;
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
   const wechatOrder = await requestWechatNativeCodeUrl(orderNo, description, totalCents);
 
-  await query(
-    `INSERT INTO orders (
-       id,
-       order_no,
-       user_id,
-       membership_plan_id,
-       total_cents,
-       paid_cents,
-       status,
-       payment_channel,
-       description
-     ) VALUES (
-       :id,
-       :orderNo,
-       :userId,
-       :membershipPlanId,
-       :totalCents,
-       0,
-       :status,
-       :paymentChannel,
-       :description
-     )`,
-    {
+  await prisma.order.create({
+    data: {
       id: orderId,
       orderNo,
       userId,
       membershipPlanId: plan.id,
       totalCents,
+      paidCents: 0,
       status: ORDER_STATUS_PENDING,
       paymentChannel: PAYMENT_CHANNEL_WECHAT_NATIVE,
       description,
     },
-  );
+  });
 
   return {
     orderId,
@@ -164,33 +129,25 @@ export async function createWechatNativeOrder(
 export async function handleWechatPaymentNotification(
   payload: WechatNotificationPayload,
 ): Promise<WechatNotificationResult> {
-  const rawPayloadJson = JSON.stringify(normalizeRawPayload(payload.rawPayload));
-  const connection = await getPool().getConnection();
+  const rawPayloadJson = normalizeRawPayload(payload.rawPayload);
+  const eventId = payload.eventId || `event:${payload.transactionId}`;
+  const eventType = payload.eventType || 'TRANSACTION.SUCCESS';
+  const resourceType = payload.resourceType || 'encrypt-resource';
 
-  try {
-    await connection.beginTransaction();
-
-    const [orderRows] = await connection.execute<OrderRow[]>(
-      `SELECT
-         o.id,
-         o.order_no,
-         o.user_id,
-         o.membership_plan_id,
-         o.total_cents,
-         o.paid_cents,
-         o.status,
-         o.paid_at,
-         o.description,
-         mp.duration_days,
-         u.vip_expired_at
-       FROM orders o
-       LEFT JOIN membership_plans mp ON mp.id = o.membership_plan_id
-       LEFT JOIN users u ON u.id = o.user_id
-       WHERE o.order_no = :orderNo
-       LIMIT 1
-       FOR UPDATE`,
-      { orderNo: payload.orderNo },
-    );
+  return prisma.$transaction(async (tx) => {
+    // FOR UPDATE 需要原始 SQL 以获得行锁
+    const orderRows = await tx.$queryRaw<OrderForUpdate[]>`
+      SELECT
+        o.id, o.order_no, o.user_id, o.membership_plan_id,
+        o.total_cents, o.paid_cents, o.status, o.paid_at, o.description,
+        mp.duration_days, u.vip_expired_at
+      FROM orders o
+      LEFT JOIN membership_plans mp ON mp.id = o.membership_plan_id
+      LEFT JOIN users u ON u.id = o.user_id
+      WHERE o.order_no = ${payload.orderNo}
+      LIMIT 1
+      FOR UPDATE
+    `;
 
     const order = orderRows[0];
 
@@ -198,38 +155,9 @@ export async function handleWechatPaymentNotification(
       throw new Error('ORDER_NOT_FOUND');
     }
 
-    const eventId = payload.eventId || `event:${payload.transactionId}`;
-    const eventType = payload.eventType || 'TRANSACTION.SUCCESS';
-    const resourceType = payload.resourceType || 'encrypt-resource';
-
-    await connection.execute<ResultSetHeader>(
-      `INSERT INTO wechat_payment_notifications (
-         id,
-         order_id,
-         order_no,
-         transaction_id,
-         event_type,
-         event_id,
-         resource_type,
-         raw_payload_json,
-         processed,
-         processed_at
-       ) VALUES (
-         :id,
-         :orderId,
-         :orderNo,
-         :transactionId,
-         :eventType,
-         :eventId,
-         :resourceType,
-         CAST(:rawPayloadJson AS JSON),
-         0,
-         NULL
-       )
-       ON DUPLICATE KEY UPDATE
-         raw_payload_json = VALUES(raw_payload_json),
-         updated_at = CURRENT_TIMESTAMP(3)`,
-      {
+    await tx.wechatPaymentNotification.upsert({
+      where: { eventId },
+      create: {
         id: randomUUID(),
         orderId: order.id,
         orderNo: order.order_no,
@@ -238,32 +166,27 @@ export async function handleWechatPaymentNotification(
         eventId,
         resourceType,
         rawPayloadJson,
+        processed: false,
+        processedAt: null,
       },
-    );
+      update: {
+        rawPayloadJson,
+        updatedAt: new Date(),
+      },
+    });
 
     if (order.status === ORDER_STATUS_PAID) {
-      await connection.execute(
-        `UPDATE wechat_payment_notifications
-         SET processed = 1,
-             processed_at = COALESCE(processed_at, CURRENT_TIMESTAMP(3))
-         WHERE order_no = :orderNo
-           AND transaction_id = :transactionId`,
-        {
-          orderNo: order.order_no,
-          transactionId: payload.transactionId,
-        },
-      );
-
-      await connection.commit();
+      await tx.wechatPaymentNotification.updateMany({
+        where: { orderNo: order.order_no, transactionId: payload.transactionId },
+        data: { processed: true, processedAt: new Date() },
+      });
 
       return {
         orderNo: order.order_no,
         status: ORDER_STATUS_PAID,
         alreadyProcessed: true,
         transactionId: payload.transactionId,
-        vipExpiredAt: order.vip_expired_at
-          ? new Date(order.vip_expired_at).toISOString()
-          : null,
+        vipExpiredAt: order.vip_expired_at ? order.vip_expired_at.toISOString() : null,
       };
     }
 
@@ -280,43 +203,20 @@ export async function handleWechatPaymentNotification(
     const paidAt = payload.successTime ? new Date(payload.successTime) : new Date();
     const nextVipExpiry = calculateNextVipExpiry(order.vip_expired_at, order.duration_days, paidAt);
 
-    await connection.execute(
-      `UPDATE orders
-       SET status = :status,
-           paid_cents = :paidCents,
-           paid_at = :paidAt
-       WHERE id = :id`,
-      {
-        id: order.id,
-        status: ORDER_STATUS_PAID,
-        paidCents,
-        paidAt,
-      },
-    );
+    await tx.order.update({
+      where: { id: order.id },
+      data: { status: ORDER_STATUS_PAID, paidCents, paidAt },
+    });
 
-    await connection.execute(
-      `UPDATE users
-       SET vip_expired_at = :vipExpiredAt
-       WHERE id = :userId`,
-      {
-        userId: order.user_id,
-        vipExpiredAt: nextVipExpiry,
-      },
-    );
+    await tx.user.update({
+      where: { id: order.user_id },
+      data: { vipExpiredAt: nextVipExpiry },
+    });
 
-    await connection.execute(
-      `UPDATE wechat_payment_notifications
-       SET processed = 1,
-           processed_at = CURRENT_TIMESTAMP(3)
-       WHERE order_no = :orderNo
-         AND transaction_id = :transactionId`,
-      {
-        orderNo: order.order_no,
-        transactionId: payload.transactionId,
-      },
-    );
-
-    await connection.commit();
+    await tx.wechatPaymentNotification.updateMany({
+      where: { orderNo: order.order_no, transactionId: payload.transactionId },
+      data: { processed: true, processedAt: new Date() },
+    });
 
     return {
       orderNo: order.order_no,
@@ -325,10 +225,5 @@ export async function handleWechatPaymentNotification(
       transactionId: payload.transactionId,
       vipExpiredAt: nextVipExpiry.toISOString(),
     };
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+  });
 }
