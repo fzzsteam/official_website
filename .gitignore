@@ -3,6 +3,7 @@
 .superpowers/
 node_modules/
 dist/
+.next/
 *.tsbuildinfo
 *.log
 .cache/
