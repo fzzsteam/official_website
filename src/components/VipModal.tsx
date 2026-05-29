@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import type { VipPlan } from '../context/AppContext';
 import { tokens } from './episode-detail/tokens';
+import { apiGet } from '../lib/api/client';
 
 const CloseIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -17,18 +18,10 @@ const benefits = [
   { icon: '◇', label: '会员专属内容' },
 ];
 
-const plans: VipPlan[] = [
-  { id: 'monthly', name: '月度会员', price: 28, period: '月', pricePerMonth: 28, recommended: false,
-    // subtitle
-  },
-  { id: 'quarterly', name: '季度会员', price: 68, period: '3个月', pricePerMonth: 22.7, recommended: true },
-  { id: 'yearly', name: '年度会员', price: 198, period: '年', pricePerMonth: 16.5, recommended: false },
-];
-
 const planSubtitles: Record<string, string> = {
-  monthly: '畅享全站短剧',
-  quarterly: '超值优惠',
-  yearly: '年度特惠 最高省¥88',
+  '30d': '畅享全站短剧',
+  '90d': '超值优惠',
+  '365d': '年度特惠',
 };
 
 const ShieldIcon = () => (
@@ -39,6 +32,65 @@ const ShieldIcon = () => (
 
 const VipModal: React.FC = () => {
   const { closeModal, selectPlan } = useApp();
+  const [plans, setPlans] = useState<VipPlan[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPlans = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const data = await apiGet<{
+          plans: Array<{
+            code: string;
+            name: string;
+            durationDays: number;
+            priceCents: number;
+            recommended: boolean;
+          }>;
+        }>('/api/membership/plans');
+
+        if (cancelled) {
+          return;
+        }
+
+        setPlans(
+          data.plans.map((plan) => {
+            const price = plan.priceCents / 100;
+            const months = plan.durationDays / 30;
+            return {
+              id: plan.code,
+              code: plan.code,
+              name: plan.name,
+              price,
+              period: plan.durationDays >= 365 ? '年' : plan.durationDays >= 90 ? '3个月' : '月',
+              durationDays: plan.durationDays,
+              priceCents: plan.priceCents,
+              pricePerMonth: months > 1 ? Number((price / months).toFixed(1)) : price,
+              recommended: plan.recommended,
+            };
+          }),
+        );
+      } catch (requestError) {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : '会员套餐加载失败');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadPlans();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Overlay onClick={closeModal}>
@@ -91,6 +143,16 @@ const VipModal: React.FC = () => {
 
         {/* Plans */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 22 }}>
+          {loading && (
+            <div style={statusCardStyle}>
+              正在加载会员套餐...
+            </div>
+          )}
+          {!loading && error && (
+            <div style={statusCardStyle}>
+              {error}
+            </div>
+          )}
           {plans.map((plan) => (
             <div
               key={plan.id}
@@ -130,7 +192,7 @@ const VipModal: React.FC = () => {
                 fontFamily: tokens.fontBody, fontSize: 11,
                 color: tokens.textMuted, letterSpacing: '0.04em', marginBottom: 16,
               }}>
-                {planSubtitles[plan.id]}
+                {planSubtitles[plan.code] ?? '畅享会员权益'}
               </div>
 
               {/* Price */}
@@ -156,7 +218,7 @@ const VipModal: React.FC = () => {
                   ¥{plan.pricePerMonth}/月
                 </div>
               )}
-              {plan.id === 'monthly' && <div style={{ height: 20, marginBottom: 0 }} />}
+              {plan.durationDays <= 30 && <div style={{ height: 20, marginBottom: 0 }} />}
 
               {/* CTA */}
               <button
@@ -217,6 +279,19 @@ const closeBtnStyle: React.CSSProperties = {
   color: tokens.textMuted, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 4, transition: 'color 0.2s ease', borderRadius: '50%',
+};
+
+const statusCardStyle: React.CSSProperties = {
+  gridColumn: '1 / -1',
+  padding: '28px 16px',
+  borderRadius: 8,
+  border: '1px solid rgba(240,237,232,0.1)',
+  background: 'rgba(240,237,232,0.03)',
+  textAlign: 'center',
+  color: tokens.textMuted,
+  fontFamily: tokens.fontBody,
+  fontSize: 12,
+  letterSpacing: '0.06em',
 };
 
 const { fontCormorant } = tokens;

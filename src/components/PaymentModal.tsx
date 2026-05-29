@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { tokens } from './episode-detail/tokens';
+import { QRCodeSVG } from 'qrcode.react';
+import { apiGet, apiPost, type ApiError } from '../lib/api/client';
 
 const CloseIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -18,73 +20,132 @@ const WechatIcon = () => (
   </svg>
 );
 
-// Simple SVG QR code placeholder
-const QRCode: React.FC = () => (
-  <div style={{
-    width: 160, height: 160,
-    background: '#fff',
-    borderRadius: 6,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    position: 'relative', overflow: 'hidden',
-    padding: 10,
-  }}>
-    <svg viewBox="0 0 100 100" width="140" height="140">
-      {/* QR code visual placeholder pattern */}
-      <rect x="0" y="0" width="100" height="100" fill="white"/>
-      {/* Top-left finder */}
-      <rect x="5" y="5" width="25" height="25" fill="#000" rx="2"/>
-      <rect x="8" y="8" width="19" height="19" fill="#fff" rx="1"/>
-      <rect x="11" y="11" width="13" height="13" fill="#000" rx="1"/>
-      {/* Top-right finder */}
-      <rect x="70" y="5" width="25" height="25" fill="#000" rx="2"/>
-      <rect x="73" y="8" width="19" height="19" fill="#fff" rx="1"/>
-      <rect x="76" y="11" width="13" height="13" fill="#000" rx="1"/>
-      {/* Bottom-left finder */}
-      <rect x="5" y="70" width="25" height="25" fill="#000" rx="2"/>
-      <rect x="8" y="73" width="19" height="19" fill="#fff" rx="1"/>
-      <rect x="11" y="76" width="13" height="13" fill="#000" rx="1"/>
-      {/* Data modules (simulated pattern) */}
-      {[38,40,42,44,46,48,50,52,54,56,58,60,62,64].map((x) =>
-        [38,40,42,44,46,48,50,52,54,56,58,60,62,64].map((y) =>
-          (x + y) % 6 === 0 ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width="2" height="2" fill="#000" />
-          ) : null
-        )
-      )}
-      {[5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35].map((x) =>
-        [38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68].map((y) =>
-          (x * y) % 7 === 1 ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width="2" height="2" fill="#000" />
-          ) : null
-        )
-      )}
-      {[38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68].map((x) =>
-        [5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35].map((y) =>
-          (x + y * 2) % 5 === 0 ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width="2" height="2" fill="#000" />
-          ) : null
-        )
-      )}
-      {/* Wechat icon overlay */}
-      <rect x="41" y="41" width="18" height="18" rx="3" fill="#07C160"/>
-      <text x="50" y="53" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">W</text>
-    </svg>
-  </div>
-);
-
 const PaymentModal: React.FC = () => {
-  const { closeModal, selectedPlan, upgradeToVip } = useApp();
-  const [timeLeft, setTimeLeft] = useState(582); // 9:42
+  const { closeModal, openModal, selectedPlan, refreshUser } = useApp();
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [error, setError] = useState('');
+  const [orderNo, setOrderNo] = useState('');
+  const [codeUrl, setCodeUrl] = useState('');
+  const [status, setStatus] = useState<'idle' | 'creating' | 'pending' | 'paid'>('idle');
 
   useEffect(() => {
+    if (!selectedPlan) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const createOrder = async () => {
+      setStatus('creating');
+      setError('');
+      setOrderNo('');
+      setCodeUrl('');
+
+      try {
+        const order = await apiPost<{
+          orderId: string;
+          orderNo: string;
+          status: 'pending';
+          planCode: string;
+          totalCents: number;
+          codeUrl: string;
+          expiresAt: string;
+        }>('/api/payments/wechat/native', { planCode: selectedPlan.code });
+
+        if (cancelled) {
+          return;
+        }
+
+        setOrderNo(order.orderNo);
+        setCodeUrl(order.codeUrl);
+        setStatus('pending');
+        setTimeLeft(Math.max(0, Math.floor((new Date(order.expiresAt).getTime() - Date.now()) / 1000)));
+      } catch (requestError) {
+        if (cancelled) {
+          return;
+        }
+
+        const apiError = requestError as ApiError;
+        if (apiError.code === 'AUTH_REQUIRED') {
+          closeModal();
+          openModal('login');
+          return;
+        }
+
+        setStatus('idle');
+        setError(requestError instanceof Error ? requestError.message : '创建支付订单失败');
+      }
+    };
+
+    void createOrder();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [closeModal, openModal, selectedPlan]);
+
+  useEffect(() => {
+    if (status !== 'pending' || timeLeft <= 0) {
+      return;
+    }
+
     const id = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 0) { clearInterval(id); return 0; }
-        return t - 1;
+      setTimeLeft((remaining) => {
+        if (remaining <= 1) {
+          clearInterval(id);
+          return 0;
+        }
+        return remaining - 1;
       });
     }, 1000);
+
     return () => clearInterval(id);
-  }, []);
+  }, [status, timeLeft]);
+
+  useEffect(() => {
+    if (!orderNo || status !== 'pending') {
+      return;
+    }
+
+    let cancelled = false;
+    const id = setInterval(() => {
+      void apiGet<{ orderNo: string; status: 'pending' | 'paid' | 'closed' }>(
+        `/api/payments/wechat/status?orderNo=${encodeURIComponent(orderNo)}`,
+      )
+        .then(async (result) => {
+          if (cancelled) {
+            return;
+          }
+
+          if (result.status === 'paid') {
+            setStatus('paid');
+            clearInterval(id);
+            await refreshUser();
+            closeModal();
+          }
+        })
+        .catch((requestError) => {
+          if (cancelled) {
+            return;
+          }
+
+          const apiError = requestError as ApiError;
+          if (apiError.code === 'AUTH_REQUIRED') {
+            clearInterval(id);
+            closeModal();
+            openModal('login');
+            return;
+          }
+
+          setError(requestError instanceof Error ? requestError.message : '支付状态查询失败');
+        });
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [closeModal, openModal, orderNo, refreshUser, status]);
 
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -128,7 +189,22 @@ const PaymentModal: React.FC = () => {
 
         {/* QR Code */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <QRCode />
+          <div style={{
+            width: 160, height: 160,
+            background: '#fff',
+            borderRadius: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative', overflow: 'hidden',
+            padding: 10,
+          }}>
+            {codeUrl ? (
+              <QRCodeSVG value={codeUrl} size={140} bgColor="#ffffff" fgColor="#000000" />
+            ) : (
+              <span style={{ color: '#666', fontSize: 12, fontFamily: tokens.fontBody }}>
+                {status === 'creating' ? '二维码生成中...' : '二维码加载失败'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Plan info */}
@@ -174,6 +250,19 @@ const PaymentModal: React.FC = () => {
           {' '}内完成支付
         </div>
 
+        {error && (
+          <div style={{
+            textAlign: 'center',
+            marginBottom: 12,
+            color: '#c0392b',
+            fontFamily: tokens.fontBody,
+            fontSize: 12,
+            letterSpacing: '0.04em',
+          }}>
+            {error}
+          </div>
+        )}
+
         {/* Footer note */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -182,23 +271,6 @@ const PaymentModal: React.FC = () => {
         }}>
           <ShieldIcon /> 支付完成后自动开通会员
         </div>
-
-        {/* Demo: simulate payment */}
-        <button
-          onClick={upgradeToVip}
-          style={{
-            width: '100%', marginTop: 16,
-            padding: '10px 0',
-            background: 'rgba(7,193,96,0.15)',
-            border: '1px solid rgba(7,193,96,0.4)',
-            borderRadius: 4, cursor: 'pointer',
-            fontFamily: tokens.fontBody, fontSize: 12,
-            color: '#07C160', letterSpacing: '0.08em',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          模拟支付成功（演示用）
-        </button>
       </div>
     </Overlay>
   );

@@ -99,7 +99,8 @@ const HomePage: React.FC = () => {
       navigateTo('episode-detail', drama);
       return;
     }
-    if (!user?.isVip) { openModal('vip'); return; }
+    if (!user) { openModal('login'); return; }
+    if (!user.isVip) { openModal('vip'); return; }
     navigateTo('episode-detail', drama);
   };
 

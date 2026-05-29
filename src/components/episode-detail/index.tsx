@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { tokens } from './tokens';
 import Navbar from './Navbar';
 import VideoPlayer from './VideoPlayer';
@@ -8,6 +8,7 @@ import EpisodeSelector from './EpisodeSelector';
 import Recommendations from './Recommendations';
 import type { Drama, CastMember, RecommendedDrama } from '../../types/drama';
 import { useApp } from '../../context/AppContext';
+import { apiGet, type ApiError } from '../../lib/api/client';
 
 interface EpisodeDetailPageProps {
   drama: Drama;
@@ -29,8 +30,51 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
   onBack,
 }) => {
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode);
-  const { navigateTo } = useApp();
+  const [currentVideoSrc, setCurrentVideoSrc] = useState(videoSrc);
+  const [playLoading, setPlayLoading] = useState(false);
+  const [playError, setPlayError] = useState('');
+  const { navigateTo, openModal } = useApp();
   const handleBack = onBack ?? (() => navigateTo('home'));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPlayUrl = async () => {
+      setPlayLoading(true);
+      setPlayError('');
+      try {
+        const data = await apiGet<{ url: string }>(
+          `/api/dramas/${encodeURIComponent(drama.id)}/episodes/${currentEpisode}/play-url`,
+        );
+        if (!cancelled) {
+          setCurrentVideoSrc(data.url);
+        }
+      } catch (requestError) {
+        if (cancelled) {
+          return;
+        }
+
+        setCurrentVideoSrc(undefined);
+        setPlayError(requestError instanceof Error ? requestError.message : '播放地址获取失败');
+        const apiError = requestError as ApiError;
+        if (apiError.code === 'AUTH_REQUIRED') {
+          openModal('login');
+        } else if (apiError.code === 'VIP_REQUIRED') {
+          openModal('vip');
+        }
+      } finally {
+        if (!cancelled) {
+          setPlayLoading(false);
+        }
+      }
+    };
+
+    void loadPlayUrl();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentEpisode, drama.id, openModal]);
 
   return (
     <div style={{
@@ -67,11 +111,13 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
 
           {/* Video player */}
           <VideoPlayer
-            src={videoSrc}
+            src={currentVideoSrc}
             poster={videoPoster}
             isVip={drama.isVip}
             onBack={handleBack}
             backLabel="返回详情页"
+            isLoading={playLoading}
+            errorMessage={playError}
           />
 
           {/* Info row: episode info + cast */}

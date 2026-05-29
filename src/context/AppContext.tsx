@@ -1,22 +1,28 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Drama } from '../types/drama';
 import { mockDrama } from '../data/mockData';
+import { apiGet, apiPost } from '../lib/api/client';
 
 export type ModalType = 'none' | 'login' | 'vip' | 'payment';
 export type PageType = 'home' | 'episode-detail' | 'about' | 'business' | 'contact';
 
 export interface VipPlan {
   id: string;
+  code: string;
   name: string;
   price: number;
   period: string;
+  durationDays: number;
+  priceCents: number;
   pricePerMonth?: number;
   recommended?: boolean;
 }
 
 export interface User {
+  id: string;
   phone: string;
   isVip: boolean;
+  vipExpiredAt?: string | null;
   avatarUrl?: string;
 }
 
@@ -32,15 +38,14 @@ interface AppContextValue extends AppState {
   navigateTo: (page: PageType, drama?: Drama) => void;
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
-  login: (phone: string) => void;
-  logout: () => void;
-  upgradeToVip: () => void;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
+  upgradeToVip: () => Promise<void>;
   selectPlan: (plan: VipPlan) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
-
-const DEMO_USER: User = { phone: '183****5627', isVip: false };
 
 interface AppProviderProps {
   children: React.ReactNode;
@@ -62,7 +67,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDrama
   const [state, setState] = useState<AppState>(() => ({
     page: initialDramaId ? 'episode-detail' : 'home',
     modal: 'none',
-    user: DEMO_USER,
+    user: null,
     selectedDrama: getInitialDrama(initialDramaId),
     selectedPlan: null,
   }));
@@ -105,28 +110,52 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDrama
     setState((s) => ({ ...s, modal: 'none' }));
   }, []);
 
-  const login = useCallback((phone: string) => {
-    setState((s) => ({ ...s, user: { phone, isVip: false }, modal: 'none' }));
+  const login = useCallback((user: User) => {
+    setState((s) => ({ ...s, user, modal: 'none' }));
   }, []);
 
-  const logout = useCallback(() => {
-    setState((s) => ({ ...s, user: null, page: 'home', modal: 'none' }));
+  const refreshUser = useCallback(async () => {
+    const data = await apiGet<{ user: User | null }>('/api/auth/me');
+    setState((s) => ({ ...s, user: data.user }));
+    return data.user;
   }, []);
 
-  const upgradeToVip = useCallback(() => {
+  useEffect(() => {
+    void refreshUser().catch(() => {
+      setState((s) => ({ ...s, user: null }));
+    });
+  }, [refreshUser]);
+
+  const logout = useCallback(async () => {
+    try {
+      await apiPost<{ success: boolean }>('/api/auth/logout');
+    } catch {
+      // Keep the client UI consistent even if the logout request fails.
+    }
     setState((s) => ({
       ...s,
-      user: s.user ? { ...s.user, isVip: true } : null,
+      user: null,
+      page: 'home',
       modal: 'none',
     }));
   }, []);
+
+  const upgradeToVip = useCallback(async () => {
+    await refreshUser();
+    setState((s) => ({
+      ...s,
+      modal: 'none',
+    }));
+  }, [refreshUser]);
 
   const selectPlan = useCallback((plan: VipPlan) => {
     setState((s) => ({ ...s, selectedPlan: plan, modal: 'payment' }));
   }, []);
 
   return (
-    <AppContext.Provider value={{ ...state, navigateTo, openModal, closeModal, login, logout, upgradeToVip, selectPlan }}>
+    <AppContext.Provider
+      value={{ ...state, navigateTo, openModal, closeModal, login, logout, refreshUser, upgradeToVip, selectPlan }}
+    >
       {children}
     </AppContext.Provider>
   );

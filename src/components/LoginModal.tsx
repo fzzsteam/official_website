@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { tokens } from './episode-detail/tokens';
+import { apiPost } from '../lib/api/client';
 
 const PhoneIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -26,26 +27,65 @@ const LoginModal: React.FC = () => {
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const sendCode = () => {
+  useEffect(() => () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  }, []);
+
+  const sendCode = async () => {
     if (!/^1\d{10}$/.test(phone)) { setError('请输入正确的手机号'); return; }
     setError('');
-    setCountdown(60);
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) { clearInterval(timerRef.current!); return 0; }
-        return c - 1;
-      });
-    }, 1000);
+    setSendingCode(true);
+    try {
+      await apiPost<{ sent: boolean; expiresAt: string }>('/api/auth/send-code', { phone });
+      setCountdown(60);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      timerRef.current = setInterval(() => {
+        setCountdown((c) => {
+          if (c <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+            }
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : '验证码发送失败');
+    } finally {
+      setSendingCode(false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!agreed) { setError('请先阅读并同意用户协议'); return; }
     if (!/^1\d{10}$/.test(phone)) { setError('请输入正确的手机号'); return; }
     if (code.length < 4) { setError('请输入短信验证码'); return; }
-    const masked = phone.slice(0, 3) + '****' + phone.slice(7);
-    login(masked);
+    setError('');
+    setSubmitting(true);
+    try {
+      const data = await apiPost<{
+        user: {
+          id: string;
+          phone: string;
+          isVip: boolean;
+          vipExpiredAt: string | null;
+        };
+      }>('/api/auth/login', { phone, code });
+      login(data.user);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : '登录失败');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -98,12 +138,12 @@ const LoginModal: React.FC = () => {
           />
           <button
             onClick={sendCode}
-            disabled={countdown > 0}
+            disabled={countdown > 0 || sendingCode}
             style={{
               background: 'none',
               border: 'none',
-              color: countdown > 0 ? tokens.textMuted : tokens.accentGold,
-              cursor: countdown > 0 ? 'not-allowed' : 'pointer',
+              color: countdown > 0 || sendingCode ? tokens.textMuted : tokens.accentGold,
+              cursor: countdown > 0 || sendingCode ? 'not-allowed' : 'pointer',
               fontFamily: tokens.fontBody, fontSize: 13,
               letterSpacing: '0.04em', flexShrink: 0,
               padding: '0 0 0 10px',
@@ -112,7 +152,7 @@ const LoginModal: React.FC = () => {
               transition: 'color 0.3s ease',
             }}
           >
-            {countdown > 0 ? `${countdown}s后重发` : '获取验证码'}
+            {sendingCode ? '发送中...' : countdown > 0 ? `${countdown}s后重发` : '获取验证码'}
           </button>
         </div>
 
@@ -126,18 +166,20 @@ const LoginModal: React.FC = () => {
         {/* Submit */}
         <button
           onClick={handleSubmit}
+          disabled={submitting}
           style={{
             width: '100%', marginTop: 24,
             background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
             border: 'none', borderRadius: 4,
-            color: '#1a0f00', cursor: 'pointer',
+            color: '#1a0f00', cursor: submitting ? 'not-allowed' : 'pointer',
             fontFamily: tokens.fontDisplay,
             fontSize: 16, fontWeight: 400,
             letterSpacing: '0.2em', padding: '14px 0',
             transition: 'opacity 0.2s ease',
+            opacity: submitting ? 0.7 : 1,
           }}
         >
-          登录 / 注册
+          {submitting ? '登录中...' : '登录 / 注册'}
         </button>
 
         {/* Agreement */}

@@ -7,6 +7,8 @@ interface VideoPlayerProps {
   isVip?: boolean;
   onBack?: () => void;
   backLabel?: string;
+  isLoading?: boolean;
+  errorMessage?: string;
 }
 
 const formatTime = (seconds: number): string => {
@@ -74,6 +76,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   isVip = true,
   onBack,
   backLabel = '返回详情页',
+  isLoading = false,
+  errorMessage = '',
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -226,7 +230,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       )}
 
       {/* Big center play button when paused */}
-      {!isPlaying && (
+      {!isPlaying && !isLoading && !errorMessage && (
         <div
           onClick={togglePlay}
           style={{
@@ -245,6 +249,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }}>
             <PlayIcon />
           </div>
+        </div>
+      )}
+
+      {(isLoading || errorMessage) && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 9,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.42)',
+            color: tokens.textPrimary,
+            fontFamily: tokens.fontBody,
+            fontSize: 14,
+            letterSpacing: '0.08em',
+          }}
+        >
+          {isLoading ? '剧集加载中...' : errorMessage}
         </div>
       )}
 
