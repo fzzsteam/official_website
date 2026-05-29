@@ -7,6 +7,9 @@ body {
   margin: 0;
   min-height: 100%;
   background: #1a140f;
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,

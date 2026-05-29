@@ -7,7 +7,7 @@ export const tokens = {
   textMuted: 'rgba(240,237,232,0.58)',
   accentGold: '#C9912A',
   accentAmber: '#d8a24d',
-  fontDisplay: "'ZCOOL QingKe HuangYou', serif",
-  fontBody: "'Noto Sans SC', sans-serif",
-  fontCormorant: "'Cormorant Garamond', serif",
+  fontDisplay: "var(--font-display), serif",
+  fontBody: "var(--font-body), sans-serif",
+  fontCormorant: "var(--font-cormorant), serif",
 } as const;
