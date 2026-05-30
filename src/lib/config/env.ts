@@ -17,6 +17,8 @@ const envSchema = z.object({
   WECHAT_PAY_API_V3_KEY: z.string().min(1),
   WECHAT_PAY_PRIVATE_KEY: z.string().min(1),
   WECHAT_PAY_CERT_SERIAL_NO: z.string().min(1),
+  WECHAT_PAY_PUBLIC_KEY_ID: z.string().min(1),
+  WECHAT_PAY_PUBLIC_KEY: z.string().min(1),
   WECHAT_PAY_NOTIFY_URL: z.string().url(),
   NEXT_PUBLIC_SITE_URL: z.string().url(),
 });

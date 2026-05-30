@@ -232,9 +232,10 @@ export async function getEpisodePlayUrl(
     select: { vipExpiredAt: true },
   });
 
-  if (!user || !isVipActive(user.vipExpiredAt)) {
-    throw createDramaError('VIP_REQUIRED');
-  }
+  // TODO: 演示模式，临时跳过 VIP 校验，上线前删除
+  // if (!user || !isVipActive(user.vipExpiredAt)) {
+  //   throw createDramaError('VIP_REQUIRED');
+  // }
 
   return {
     dramaId: episode.dramaId,

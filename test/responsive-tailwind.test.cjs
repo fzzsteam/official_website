@@ -34,16 +34,15 @@ test('Navbar uses Tailwind responsive classes for mobile/desktop', () => {
   assert.match(src, /md:hidden/, 'hamburger should be hidden on desktop');
 });
 
-test('VideoPlayer uses 9:16 aspect ratio', () => {
+test('VideoPlayer uses desktop 16:9 container and preserves portrait videos', () => {
   const src = read('src/components/episode-detail/VideoPlayer.tsx');
-  assert.doesNotMatch(src, /aspectRatio.*16.*9|16\/9/, 'should not use 16:9 ratio');
-  assert.match(src, /aspect-\[9\/16\]/, 'should use 9:16 Tailwind class');
+  assert.match(src, /aspectRatio:\s*isDesktop\s*\?\s*'16\/9'\s*:\s*\(videoAspect\s*\?\?\s*'9\/16'\)/, 'desktop should default to 16:9 and mobile should fall back to 9:16');
+  assert.match(src, /objectFit:\s*isDesktop\s*\?\s*'contain'\s*:\s*'cover'/, 'desktop should contain portrait videos instead of cropping them');
 });
 
 test('EpisodeDetailPage has responsive flex layout', () => {
   const src = read('src/components/episode-detail/index.tsx');
   assert.match(src, /flex-col lg:flex-row/, 'should stack on mobile, side-by-side on desktop');
-  assert.match(src, /lg:max-w-\[400px\]/, 'video should be max 400px on desktop');
   assert.match(src, /hidden lg:flex/, 'sidebar selector should be hidden on mobile');
   assert.match(src, /lg:hidden/, 'inline selector should be hidden on desktop');
 });

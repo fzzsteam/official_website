@@ -116,8 +116,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDrama
 
   const refreshUser = useCallback(async () => {
     const data = await apiGet<{ user: User | null }>('/api/auth/me');
-    setState((s) => ({ ...s, user: data.user }));
-    return data.user;
+    // TODO: 演示模式，临时给所有用户 VIP 权限，上线前删除
+    const user = data.user ? { ...data.user, isVip: true } : null;
+    setState((s) => ({ ...s, user }));
+    return user;
   }, []);
 
   useEffect(() => {
