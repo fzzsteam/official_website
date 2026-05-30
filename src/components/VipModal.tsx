@@ -96,8 +96,9 @@ const VipModal: React.FC = () => {
     <Overlay onClick={closeModal}>
       <div
         onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[480px] mx-4 md:mx-0"
         style={{
-          width: 620, borderRadius: 12,
+          borderRadius: 12,
           background: 'linear-gradient(180deg, #282018 0%, #1c1610 100%)',
           border: '1px solid rgba(201,145,42,0.22)',
           boxShadow: '0 28px 90px rgba(0,0,0,0.65)',
