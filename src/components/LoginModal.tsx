@@ -92,13 +92,14 @@ const LoginModal: React.FC = () => {
     <Overlay onClick={closeModal}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[420px] mx-4 md:mx-0"
+        className="w-full max-w-[420px] mx-4 md:mx-0 px-5 sm:px-10"
         style={{
           borderRadius: 8,
           background: 'linear-gradient(180deg, #2a2118 0%, #1e1811 100%)',
           border: '1px solid rgba(201,145,42,0.2)',
           boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
-          padding: '36px 40px 32px',
+          paddingTop: 36,
+          paddingBottom: 32,
           position: 'relative',
         }}
       >
