@@ -81,8 +81,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
                     color: tokens.textMuted,
                   }),
             }}>
-              {user.isVip && <CrownIcon />}
-              {user.isVip ? '尊享会员' : '普通用户'}
+              {user.isVip ? '会员' : '普通用户'}
             </span>
           </div>
         </div>

@@ -1,33 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { tokens } from './tokens';
 import type { Drama } from '../../types/drama';
+import { useApp } from '../../context/AppContext';
 
 interface EpisodeInfoProps {
   drama: Drama;
   currentEpisode: number;
-  isCollected?: boolean;
-  onCollect?: () => void;
-  onLike?: () => void;
-  onShare?: () => void;
 }
 
-const StarIcon = ({ filled }: { filled: boolean }) => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#C9912A' : 'none'} stroke={filled ? '#C9912A' : 'currentColor'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-const ThumbUpIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
-    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-  </svg>
-);
-const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-  </svg>
-);
 const ChevronDownIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9" />
@@ -42,18 +22,17 @@ const CrownSmIcon = () => (
 const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
   drama,
   currentEpisode,
-  isCollected = false,
-  onCollect,
-  onLike,
-  onShare,
 }) => {
+  const { user } = useApp();
   const [expanded, setExpanded] = useState(false);
-  const [collected, setCollected] = useState(isCollected);
+  const [needsExpand, setNeedsExpand] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
 
-  const handleCollect = () => {
-    setCollected((c) => !c);
-    onCollect?.();
-  };
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    setNeedsExpand(el.scrollHeight > el.clientHeight);
+  }, [drama.description]);
 
   return (
     <div className="py-5 flex-1">
@@ -69,7 +48,7 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
             }}>
               {drama.title}
             </h1>
-            {drama.isVip && (
+            {drama.isVip && (!user || !user.isVip) && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
                 background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
@@ -77,8 +56,7 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
                 padding: '2px 8px', borderRadius: 2,
                 fontFamily: tokens.fontBody, letterSpacing: '0.1em',
               }}>
-                <CrownSmIcon />
-                尊享会员·全集免费看
+                会员·全集免费看
               </span>
             )}
           </div>
@@ -95,24 +73,11 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
             {drama.genres.map((g) => <span key={g}>{g}</span>)}
           </div>
         </div>
-        {/* Action buttons vertical — desktop only */}
-        <div className="hidden md:flex flex-col items-center gap-3.5">
-          <ActionBtn icon={<StarIcon filled={collected} />} label="已收藏" onClick={handleCollect} active={collected} />
-          <ActionBtn icon={<ThumbUpIcon />} label="点赞" onClick={onLike} />
-          <ActionBtn icon={<ShareIcon />} label="分享" onClick={onShare} />
-        </div>
-      </div>
-
-      {/* Action buttons horizontal — mobile only */}
-      <div className="flex md:hidden items-center gap-5 mb-3">
-        <ActionBtn icon={<StarIcon filled={collected} />} label="已收藏" onClick={handleCollect} active={collected} />
-        <ActionBtn icon={<ThumbUpIcon />} label="点赞" onClick={onLike} />
-        <ActionBtn icon={<ShareIcon />} label="分享" onClick={onShare} />
       </div>
 
       {/* Description */}
       <div className="pr-0 md:pr-[60px]">
-        <p style={{
+        <p ref={descRef} style={{
           fontFamily: tokens.fontBody, fontSize: 13, lineHeight: 2,
           color: 'rgba(240,237,232,0.65)', fontWeight: 300,
           letterSpacing: '0.04em', margin: 0,
@@ -123,49 +88,30 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
         }}>
           简介：{drama.description}
         </p>
-        <button
-          onClick={() => setExpanded((e) => !e)}
-          className="inline-flex items-center gap-1 mt-2"
-          style={{
-            background: 'none', border: 'none',
-            color: tokens.textMuted, cursor: 'pointer',
-            fontFamily: tokens.fontBody, fontSize: 12,
-            letterSpacing: '0.08em', padding: 0,
-          }}
-        >
-          {expanded ? '收起' : '展开'}
-          <span style={{
-            display: 'inline-block',
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.3s ease',
-          }}>
-            <ChevronDownIcon />
-          </span>
-        </button>
+        {needsExpand && (
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            className="inline-flex items-center gap-1 mt-2"
+            style={{
+              background: 'none', border: 'none',
+              color: tokens.textMuted, cursor: 'pointer',
+              fontFamily: tokens.fontBody, fontSize: 12,
+              letterSpacing: '0.08em', padding: 0,
+            }}
+          >
+            {expanded ? '收起' : '展开'}
+            <span style={{
+              display: 'inline-block',
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s ease',
+            }}>
+              <ChevronDownIcon />
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
 };
-
-const ActionBtn: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-  active?: boolean;
-}> = ({ icon, label, onClick, active }) => (
-  <button
-    onClick={onClick}
-    style={{
-      background: 'none', border: 'none', cursor: 'pointer',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-      color: active ? tokens.accentGold : tokens.textMuted,
-      transition: 'color 0.3s ease',
-      padding: 0,
-    }}
-  >
-    {icon}
-    <span style={{ fontFamily: tokens.fontBody, fontSize: 10, letterSpacing: '0.06em' }}>{label}</span>
-  </button>
-);
 
 export default EpisodeInfo;

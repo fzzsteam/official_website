@@ -40,11 +40,17 @@ function apiDramaToLegacy(d: ApiDrama): Drama {
 
 // ── Component ────────────────────────────────────────────────────
 const HomePage: React.FC = () => {
-  const { user, navigateTo, openModal } = useApp();
+  const { navigateTo } = useApp();
   const [dramas, setDramas] = useState<ApiDrama[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showNoMore, setShowNoMore] = useState(false);
+
+  const handleViewAll = () => {
+    setShowNoMore(true);
+    setTimeout(() => setShowNoMore(false), 2000);
+  };
 
   useEffect(() => {
     apiGet<{ dramas: ApiDrama[] }>('/api/dramas')
@@ -92,8 +98,6 @@ const HomePage: React.FC = () => {
 
   const handlePlayDrama = (drama: ApiDrama) => {
     if (drama.releaseStatus !== 'released') return;
-    if (!user) { openModal('login'); return; }
-    if (!user.isVip) { openModal('vip'); return; }
     navigateTo('episode-detail', apiDramaToLegacy(drama));
   };
 
@@ -218,22 +222,6 @@ const HomePage: React.FC = () => {
               >
                 <PlayIcon /> 立即观看
               </button>
-
-              <button
-                onClick={() => navigateTo('episode-detail', apiDramaToLegacy(hero))}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(240,237,232,0.08)',
-                  border: '1px solid rgba(240,237,232,0.22)',
-                  borderRadius: 24, color: tokens.textPrimary, cursor: 'pointer',
-                  fontFamily: tokens.fontBody, fontSize: 13,
-                  letterSpacing: '0.1em', padding: '12px 22px',
-                  backdropFilter: 'blur(4px)',
-                  transition: 'background 0.2s ease, border-color 0.2s ease',
-                }}
-              >
-                查看详情
-              </button>
             </div>
           </div>
 
@@ -281,14 +269,17 @@ const HomePage: React.FC = () => {
           }}>
             热门推荐
           </h2>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            background: 'none', border: 'none',
-            color: tokens.textMuted, cursor: 'pointer',
-            fontFamily: tokens.fontBody, fontSize: 12,
-            letterSpacing: '0.08em', padding: 0,
-          }}>
-            查看全部 <ViewAllIcon />
+          <button
+            onClick={handleViewAll}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'none', border: 'none',
+              color: tokens.textMuted, cursor: 'pointer',
+              fontFamily: tokens.fontBody, fontSize: 12,
+              letterSpacing: '0.08em', padding: 0,
+            }}
+          >
+            {showNoMore ? '没有更多了' : <>查看全部 <ViewAllIcon /></>}
           </button>
         </div>
 

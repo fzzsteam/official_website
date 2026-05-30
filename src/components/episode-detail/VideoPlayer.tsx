@@ -48,15 +48,20 @@ const VolumeIcon = () => (
     <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
   </svg>
 );
-const SettingsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+const MutedIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
   </svg>
 );
 const FullscreenIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+  </svg>
+);
+const ExitFullscreenIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
   </svg>
 );
 const BackArrowIcon = () => (
@@ -75,15 +80,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   poster,
   isVip = true,
   onBack,
-  backLabel = '返回详情页',
+  backLabel = '返回首页',
   isLoading = false,
   errorMessage = '',
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [videoAspect, setVideoAspect] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(1112); // 18:32 demo
+  const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -100,19 +114,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => { if (hideTimer.current) clearTimeout(hideTimer.current); };
   }, [resetHideTimer]);
 
-  // Simulate playback progress (demo only – real impl uses video element events)
   useEffect(() => {
-    if (!isPlaying) return;
-    const id = setInterval(() => {
-      setCurrentTime((t) => {
-        if (t >= duration) { setIsPlaying(false); return duration; }
-        return t + 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, [isPlaying, duration]);
+    const handler = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
-  // Sync with real video element if src provided
+  // Reset state when src changes (episode switch)
+  useEffect(() => {
+    setIsPlaying(false);
+    setIsVideoReady(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setPlaybackRate(1);
+    setShowSpeedMenu(false);
+    setVideoAspect(null);
+  }, [src]);
+
+  // Sync with real video element
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -120,24 +139,77 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const onDurationChange = () => setDuration(video.duration);
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
+    const onCanPlay = () => setIsVideoReady(true);
+    const onLoadedMetadata = () => {
+      if (video.videoWidth && video.videoHeight) {
+        setVideoAspect(`${video.videoWidth}/${video.videoHeight}`);
+      }
+    };
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('durationchange', onDurationChange);
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('durationchange', onDurationChange);
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
+      video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
   const togglePlay = () => {
     const video = videoRef.current;
+    if (!video || !isVideoReady) return;
+    isPlaying ? video.pause() : video.play();
+    resetHideTimer();
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const next = !video.muted;
+    video.muted = next;
+    setIsMuted(next);
+    resetHideTimer();
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value);
+    const video = videoRef.current;
     if (video) {
-      isPlaying ? video.pause() : video.play();
+      video.volume = v;
+      video.muted = v === 0;
+    }
+    setVolume(v);
+    setIsMuted(v === 0);
+    resetHideTimer();
+  };
+
+  const changeSpeed = (rate: number) => {
+    const video = videoRef.current;
+    if (video) video.playbackRate = rate;
+    setPlaybackRate(rate);
+    setShowSpeedMenu(false);
+    resetHideTimer();
+  };
+
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
     } else {
-      setIsPlaying((p) => !p);
+      container.requestFullscreen();
     }
     resetHideTimer();
   };
@@ -161,16 +233,39 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     resetHideTimer();
   };
 
-  // Demo: start with some progress shown
-  useEffect(() => { setCurrentTime(765); }, []); // 12:45
+  const displayVolume = isMuted ? 0 : volume;
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-black aspect-[9/16]"
+      className="relative w-full bg-black"
+      style={{ aspectRatio: isDesktop ? '16/9' : (videoAspect ?? '9/16') }}
       onMouseMove={resetHideTimer}
       onMouseLeave={() => setShowControls(false)}
     >
+      <style>{`
+        .fzzs-vol-slider { appearance: none; -webkit-appearance: none; outline: none; border: none; background: transparent; }
+        .fzzs-vol-slider::-webkit-slider-runnable-track {
+          height: 3px; border-radius: 2px;
+        }
+        .fzzs-vol-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 10px; height: 10px; border-radius: 50%;
+          background: ${tokens.accentAmber};
+          box-shadow: 0 0 5px rgba(201,145,42,0.7);
+          cursor: pointer; margin-top: -3.5px;
+        }
+        .fzzs-vol-slider::-moz-range-track {
+          height: 3px; border-radius: 2px;
+          background: rgba(255,255,255,0.2);
+        }
+        .fzzs-vol-slider::-moz-range-thumb {
+          width: 10px; height: 10px; border-radius: 50%; border: none;
+          background: ${tokens.accentAmber};
+          box-shadow: 0 0 5px rgba(201,145,42,0.7);
+          cursor: pointer;
+        }
+      `}</style>
       {/* Back button */}
       <button
         onClick={onBack}
@@ -187,8 +282,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <span className="hidden md:inline">{backLabel}</span>
       </button>
 
-      {/* VIP badge */}
-      {isVip && (
+      {/* VIP upsell badge for non-members */}
+      {!isVip && (
         <div style={{
           position: 'absolute', top: 16, right: 16, zIndex: 20,
           display: 'flex', alignItems: 'center', gap: 5,
@@ -201,7 +296,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           fontFamily: tokens.fontBody, letterSpacing: '0.06em',
         }}>
           <CrownSmIcon />
-          尊享会员 · 全集免费看
+          开通会员 · 畅享全集
         </div>
       )}
 
@@ -210,7 +305,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         ref={videoRef}
         src={src}
         poster={poster}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', height: '100%', objectFit: isDesktop ? 'contain' : 'cover', display: 'block' }}
         onClick={togglePlay}
       />
 
@@ -227,8 +322,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       )}
 
-      {/* Big center play button when paused */}
-      {!isPlaying && !isLoading && !errorMessage && (
+      {/* Big center play button when paused and video is ready */}
+      {!isPlaying && !isLoading && !errorMessage && isVideoReady && (
         <div
           onClick={togglePlay}
           style={{
@@ -276,9 +371,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)',
           padding: '32px 18px 14px',
-          opacity: showControls ? 1 : 0,
+          opacity: (showControls && isVideoReady && !isLoading && !errorMessage) ? 1 : 0,
           transition: 'opacity 0.4s ease',
-          pointerEvents: showControls ? 'auto' : 'none',
+          pointerEvents: (showControls && isVideoReady && !isLoading && !errorMessage) ? 'auto' : 'none',
         }}
       >
         {/* Progress bar */}
@@ -319,9 +414,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <button onClick={() => seek(10)} className="p-3 md:p-1" style={ctrlBtnStyle} title="前进10秒">
                 <Forward10Icon />
               </button>
-              <button className="hidden md:flex p-1" style={ctrlBtnStyle} title="音量">
-                <VolumeIcon />
-              </button>
+              <div
+                className="hidden md:flex items-center gap-1"
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setShowVolumeSlider(true)}
+                onMouseLeave={() => setShowVolumeSlider(false)}
+              >
+                <button onClick={toggleMute} style={ctrlBtnStyle} title={isMuted ? '取消静音' : '静音'}>
+                  {isMuted || volume === 0 ? <MutedIcon /> : <VolumeIcon />}
+                </button>
+                <div style={{
+                  width: showVolumeSlider ? 60 : 0,
+                  overflow: 'hidden',
+                  transition: 'width 0.2s ease',
+                  display: 'flex', alignItems: 'center',
+                }}>
+                  <input
+                    type="range" min={0} max={1} step={0.05}
+                    value={displayVolume}
+                    onChange={handleVolumeChange}
+                    className="fzzs-vol-slider"
+                    style={{
+                      width: 60, cursor: 'pointer', flexShrink: 0,
+                      background: `linear-gradient(to right, ${tokens.accentGold} ${displayVolume * 100}%, rgba(255,255,255,0.2) ${displayVolume * 100}%)`,
+                    }}
+                  />
+                </div>
+              </div>
               <span style={{
                 fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted,
                 letterSpacing: '0.04em', userSelect: 'none',
@@ -332,19 +451,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             {/* Right controls */}
             <div className="flex items-center gap-2 md:gap-[8px]">
-              {['倍速', '高清'].map((label) => (
-                <button key={label} className="hidden md:block" style={{
-                  background: 'none', border: '1px solid rgba(240,237,232,0.28)',
-                  color: tokens.textMuted, cursor: 'pointer',
-                  fontFamily: tokens.fontBody, fontSize: 11,
-                  padding: '3px 9px', borderRadius: 2,
-                  letterSpacing: '0.08em',
-                }}>
-                  {label}
+              {/* Speed selector */}
+              <div className="hidden md:block" style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowSpeedMenu(s => !s)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid rgba(240,237,232,0.28)',
+                    color: playbackRate !== 1 ? tokens.accentGold : tokens.textMuted,
+                    cursor: 'pointer',
+                    fontFamily: tokens.fontBody, fontSize: 11,
+                    padding: '3px 9px', borderRadius: 2,
+                    letterSpacing: '0.08em',
+                  }}
+                >
+                  {playbackRate === 1 ? '倍速' : `${playbackRate}x`}
                 </button>
-              ))}
-              <button className="hidden md:flex p-1" style={ctrlBtnStyle} title="设置"><SettingsIcon /></button>
-              <button className="p-3 md:p-1" style={ctrlBtnStyle} title="全屏"><FullscreenIcon /></button>
+                {showSpeedMenu && (
+                  <div style={{
+                    position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
+                    background: 'rgba(18,13,8,0.96)',
+                    border: '1px solid rgba(201,145,42,0.25)',
+                    borderRadius: 4, overflow: 'hidden', minWidth: 72,
+                  }}>
+                    {[1, 1.5, 2].map(rate => (
+                      <button
+                        key={rate}
+                        onClick={() => changeSpeed(rate)}
+                        style={{
+                          display: 'block', width: '100%',
+                          background: playbackRate === rate ? 'rgba(201,145,42,0.15)' : 'none',
+                          border: 'none',
+                          color: playbackRate === rate ? tokens.accentGold : tokens.textMuted,
+                          fontFamily: tokens.fontBody, fontSize: 13,
+                          padding: '9px 16px', cursor: 'pointer',
+                          letterSpacing: '0.06em', textAlign: 'center',
+                        }}
+                      >
+                        {rate === 1 ? '1x' : `${rate}x`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={toggleFullscreen} className="p-3 md:p-1" style={ctrlBtnStyle} title={isFullscreen ? '退出全屏' : '全屏'}>
+                {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+              </button>
             </div>
           </div>
       </div>

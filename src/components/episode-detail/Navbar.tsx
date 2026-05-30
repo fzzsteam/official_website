@@ -8,17 +8,6 @@ interface NavbarProps {
   onSearch?: () => void;
   onHistory?: () => void;
 }
-
-const NavSearchIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-  </svg>
-);
-const HistoryIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-  </svg>
-);
 const UserIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -50,14 +39,13 @@ const CloseMenuIcon = () => (
 
 const navLinks: Array<{ label: string; page?: PageType; modal?: Exclude<ModalType, 'none'> }> = [
   { label: '首页', page: 'home' },
-  { label: '短剧', page: 'home' },
   { label: '会员中心', modal: 'vip' },
   { label: '关于我们', page: 'about' },
   { label: '业务介绍', page: 'business' },
   { label: '联系我们', page: 'contact' },
 ];
 
-const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
+const Navbar: React.FC<NavbarProps> = () => {
   const { user, page, navigateTo, openModal } = useApp();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -118,16 +106,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
-          {/* Search + History — desktop only */}
-          <button onClick={onSearch} className="hidden md:flex items-center gap-1.5" style={iconBtnStyle}>
-            <NavSearchIcon />
-            <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>搜索剧名/演员</span>
-          </button>
-          <button onClick={onHistory} className="hidden md:flex items-center gap-1.5" style={iconBtnStyle}>
-            <HistoryIcon />
-            <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>观看历史</span>
-          </button>
-
           {/* User area */}
           {user ? (
             <div className="relative">
@@ -157,7 +135,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
                     padding: '2px 6px', borderRadius: 2,
                     fontFamily: tokens.fontBody, letterSpacing: '0.08em',
                   }}>
-                    <CrownIcon /> 尊享会员
+                    会员
                   </span>
                 )}
                 <span className="hidden md:flex" style={{ color: tokens.textMuted }}>

@@ -1,6 +1,22 @@
 import OSS from 'ali-oss';
 import * as path from 'path';
 import * as fs from 'fs';
+import { resolve } from 'node:path';
+
+function loadEnvFile(filePath: string) {
+  const abs = resolve(process.cwd(), filePath);
+  if (!fs.existsSync(abs)) return;
+  for (const line of fs.readFileSync(abs, 'utf-8').split('\n')) {
+    const trimmed = line.split('#')[0].trim();
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim();
+    if (key && !process.env[key]) process.env[key] = val;
+  }
+}
+loadEnvFile('.env.local');
+loadEnvFile('.env');
 
 interface UploadEntry {
   localPath: string;
@@ -96,15 +112,15 @@ function buildUploadMap(): UploadEntry[] {
 
   // ── Upcoming dramas ───────────────────────────────────────────
   const upcoming: Array<{ filename: string; ossKey: string }> = [
-    { filename: '天台来信.jpg',            ossKey: 'dramas/upcoming/tian-tai-lai-xin.jpg' },
-    { filename: '海上旧梦.jpg',            ossKey: 'dramas/upcoming/hai-shang-jiu-meng.jpg' },
-    { filename: '港城无声.jpg',            ossKey: 'dramas/upcoming/gang-cheng-wu-sheng.jpg' },
-    { filename: '第七码头.jpg',            ossKey: 'dramas/upcoming/di-qi-ma-tou.jpg' },
-    { filename: '迷雾追凶.jpg',            ossKey: 'dramas/upcoming/mi-wu-zhui-xiong.jpg' },
-    { filename: '长安夜雨.jpg',            ossKey: 'dramas/upcoming/chang-an-ye-yu.jpg' },
-    { filename: '雪落关山.jpg',            ossKey: 'dramas/upcoming/xue-luo-guan-shan.jpg' },
-    { filename: '真千金她不装了.jpg',      ossKey: 'dramas/upcoming/zhen-qian-jin-ta-bu-zhuang-le.jpg' },
-    { filename: '闪婚后上司宠我入骨.jpg',  ossKey: 'dramas/upcoming/shan-hun-hou-shang-si-chong-wo-ru-gu.jpg' },
+    { filename: '天台来信.jpg',            ossKey: `dramas/upcoming/tian-tai-lai-xin.jpg` },
+    { filename: '海上旧梦.jpg',            ossKey: `dramas/upcoming/hai-shang-jiu-meng.jpg` },
+    { filename: '港城无声.jpg',            ossKey: `dramas/upcoming/gang-cheng-wu-sheng.jpg` },
+    { filename: '第七码头.jpg',            ossKey: `dramas/upcoming/di-qi-ma-tou.jpg` },
+    { filename: '迷雾追凶.jpg',            ossKey: `dramas/upcoming/mi-wu-zhui-xiong.jpg` },
+    { filename: '长安夜雨.jpg',            ossKey: `dramas/upcoming/chang-an-ye-yu.jpg` },
+    { filename: '雪落关山.jpg',            ossKey: `dramas/upcoming/xue-luo-guan-shan.jpg` },
+    { filename: '真千金她不装了.jpg',      ossKey: `dramas/upcoming/zhen-qian-jin-ta-bu-zhuang-le.jpg` },
+    { filename: '闪婚后上司宠我入骨.jpg',  ossKey: `dramas/upcoming/shan-hun-hou-shang-si-chong-wo-ru-gu.jpg` },
   ];
 
   const upcomingDir = path.join(DRAMA_DIR, '即将上线');

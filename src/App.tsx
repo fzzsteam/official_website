@@ -10,11 +10,26 @@ import LoginModal from './components/LoginModal';
 import VipModal from './components/VipModal';
 import PaymentModal from './components/PaymentModal';
 import { apiGet } from './lib/api/client';
-import type { CastMember, RecommendedDrama, ApiDramaDetail } from './types/drama';
+import type { Drama, CastMember, RecommendedDrama, ApiDramaDetail } from './types/drama';
 
 interface DramaDetailState {
+  drama: Drama;
   cast: CastMember[];
   recommendations: RecommendedDrama[];
+}
+
+function apiDramaToLegacy(d: ApiDramaDetail): Drama {
+  return {
+    id: d.id,
+    title: d.title,
+    totalEpisodes: d.totalEpisodes,
+    episodeDuration: 0,
+    year: new Date().getFullYear(),
+    genres: d.genreNames,
+    description: d.synopsis ?? '',
+    coverUrl: d.coverUrl,
+    isVip: d.releaseStatus === 'released',
+  };
 }
 
 const AppContent: React.FC = () => {
@@ -33,6 +48,7 @@ const AppContent: React.FC = () => {
       .then((data) => {
         if (cancelled) return;
         setDramaDetail({
+          drama: apiDramaToLegacy(data.drama),
           cast: data.drama.cast.map((c) => ({
             id: c.id,
             name: c.name,
@@ -48,7 +64,7 @@ const AppContent: React.FC = () => {
         });
       })
       .catch(() => {
-        if (!cancelled) setDramaDetail({ cast: [], recommendations: [] });
+        if (!cancelled) setDramaDetail({ drama: selectedDrama, cast: [], recommendations: [] });
       });
 
     return () => { cancelled = true; };
@@ -65,7 +81,8 @@ const AppContent: React.FC = () => {
       {page === 'contact' && <ContactPage />}
       {page === 'episode-detail' && selectedDrama && (
         <EpisodeDetailPage
-          drama={selectedDrama}
+          key={selectedDrama.id}
+          drama={dramaDetail?.drama ?? selectedDrama}
           cast={dramaDetail?.cast ?? []}
           recommendations={dramaDetail?.recommendations ?? []}
           initialEpisode={1}

@@ -14,9 +14,13 @@ const ShieldIcon = () => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
-const WechatIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="#07C160">
-    <path d="M8.7 10.3c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7zm3.6 0c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7zM3 10.4C3 7.4 6.1 5 10 5s7 2.4 7 5.4-3.1 5.4-7 5.4c-.6 0-1.2-.1-1.8-.2L5.5 17l.8-2.3C4.1 13.7 3 12.1 3 10.4zm11.3 3.4c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6zm2.9 0c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6zm.8-5.5c-.2 0-.4 0-.6.1-.1-3.4-3.4-6.1-7.4-6.1-4.1 0-7.5 2.8-7.5 6.3 0 1.9 1 3.6 2.6 4.8L4.4 15l2.7-1.4c.9.3 1.9.5 2.9.5h.3C10 14.4 10 14.8 10 15.2c0 2.6 2.4 4.8 5.3 4.8.7 0 1.4-.1 2-.4l2.3 1.1-.8-2c1.3-.9 2.2-2.3 2.2-3.8 0-2.4-2.1-4.6-4.9-4.6z"/>
+/* Official WeChat Pay icon — extracted from https://gtimg.wechatpay-global.com/pay_en/img/common/logo.svg */
+const WechatPayIcon = () => (
+  <svg width="34" height="30" viewBox="0 0 375 331" fill="none">
+    <path
+      d="M136.3106,209.1757 C134.6186,210.0287 132.7146,210.5227 130.6896,210.5227 C126.0036,210.5227 121.9326,207.9457 119.7906,204.1297 L118.9726,202.3377 L84.8556,127.4737 C84.4876,126.6577 84.2596,125.7377 84.2596,124.8407 C84.2596,121.3917 87.0566,118.5947 90.5066,118.5947 C91.9076,118.5947 93.2016,119.0607 94.2426,119.8347 L134.5036,148.4997 C137.4446,150.4237 140.9586,151.5527 144.7386,151.5527 C146.9926,151.5527 149.1426,151.1307 151.1446,150.4037 L340.4756,66.1377 C306.5386,26.1397 250.6466,0.0007 187.3966,0.0007 C83.8966,0.0007 -0.0004,69.9177 -0.0004,156.1707 C-0.0004,203.2247 25.2416,245.5827 64.7496,274.2127 C67.9196,276.4757 69.9946,280.1937 69.9946,284.3897 C69.9946,285.7767 69.6986,287.0447 69.3356,288.3677 C66.1796,300.1387 61.1306,318.9887 60.8936,319.8707 C60.5006,321.3497 59.8856,322.8907 59.8856,324.4367 C59.8856,327.8867 62.6816,330.6817 66.1366,330.6817 C67.4886,330.6817 68.5986,330.1787 69.7416,329.5197 L110.7676,305.8337 C113.8546,304.0537 117.1206,302.9487 120.7216,302.9487 C122.6366,302.9487 124.4866,303.2447 126.2266,303.7777 C145.3676,309.2817 166.0156,312.3407 187.3966,312.3407 C290.8926,312.3407 374.8006,242.4187 374.8006,156.1707 C374.8006,130.0457 367.0596,105.4437 353.4536,83.8007 L137.6776,208.3857 L136.3106,209.1757 Z"
+      fill="#1AAD19"
+    />
   </svg>
 );
 
@@ -171,8 +175,8 @@ const PaymentModal: React.FC = () => {
 
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
-            <WechatIcon />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
+            <WechatPayIcon />
             <span style={{
               fontFamily: tokens.fontDisplay, fontSize: 18,
               color: tokens.textPrimary, letterSpacing: '0.1em',
@@ -231,8 +235,8 @@ const PaymentModal: React.FC = () => {
             </div>
           </div>
           <div style={{
-            fontFamily: tokens.fontCormorant, fontSize: 26, fontWeight: 600,
-            color: tokens.accentAmber,
+            fontFamily: tokens.fontCormorant, fontSize: 28, fontWeight: 600,
+            color: tokens.accentAmber, fontVariantNumeric: 'tabular-nums',
           }}>
             ¥{selectedPlan.price.toFixed(2)}
           </div>
@@ -245,7 +249,7 @@ const PaymentModal: React.FC = () => {
           letterSpacing: '0.04em',
         }}>
           请在{' '}
-          <span style={{ color: tokens.accentGold, fontWeight: 500, fontFamily: tokens.fontCormorant, fontSize: 15 }}>
+          <span style={{ color: tokens.accentGold, fontWeight: 500, fontFamily: tokens.fontCormorant, fontSize: 16, fontVariantNumeric: 'tabular-nums' }}>
             {formatTime(timeLeft)}
           </span>
           {' '}内完成支付

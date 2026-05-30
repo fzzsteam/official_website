@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { tokens } from './tokens';
 import type { CastMember } from '../../types/drama';
 
@@ -15,6 +15,13 @@ const ChevronRightIcon = () => (
 
 const CastSection: React.FC<CastSectionProps> = ({ cast, onViewAll }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showNoMore, setShowNoMore] = useState(false);
+
+  const handleViewAll = () => {
+    setShowNoMore(true);
+    setTimeout(() => setShowNoMore(false), 2000);
+    onViewAll?.();
+  };
 
   return (
     <div className="w-full min-w-0">
@@ -28,7 +35,7 @@ const CastSection: React.FC<CastSectionProps> = ({ cast, onViewAll }) => {
           演员阵容
         </h2>
         <button
-          onClick={onViewAll}
+          onClick={handleViewAll}
           style={{
             display: 'flex', alignItems: 'center', gap: 3,
             background: 'none', border: 'none', cursor: 'pointer',
@@ -37,8 +44,7 @@ const CastSection: React.FC<CastSectionProps> = ({ cast, onViewAll }) => {
             padding: 0, transition: 'color 0.3s ease',
           }}
         >
-          全部演员
-          <ChevronRightIcon />
+          {showNoMore ? '没有更多了' : <><>全部演员</><ChevronRightIcon /></>}
         </button>
       </div>
 

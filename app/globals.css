@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-display: 'ZCOOL QingKe HuangYou';
+  --font-body: 'Noto Sans SC';
+  --font-cormorant: 'Cormorant Garamond';
+}
+
 * {
   box-sizing: border-box;
 }

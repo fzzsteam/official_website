@@ -223,14 +223,6 @@ export async function getEpisodePlayUrl(
     throw createDramaError('EPISODE_NOT_FOUND');
   }
 
-  if (episode.accessLevel === 'free') {
-    return {
-      dramaId: episode.dramaId,
-      episodeNo: episode.episodeNo,
-      playUrl: signOssPath(episode.videoPath),
-    };
-  }
-
   if (!userId) {
     throw createDramaError('AUTH_REQUIRED');
   }

@@ -64,6 +64,19 @@
 - 微信支付回调必须验签并做幂等处理。
 - OSS private 资源必须由服务端按权限生成短时签名 URL。
 
+## 响应式布局规范
+
+- 断点约定：移动端 `< 768px`（默认），桌面端 `≥ 1024px`（`lg:` 前缀）。
+- 所有布局属性（flex、grid、padding、width、display、响应式可见性）使用 Tailwind 类；装饰样式（复杂渐变、box-shadow）保留内联 style。
+- 移动端优先：先写移动端样式，再用 `md:` / `lg:` 叠加桌面端覆盖。
+- 视频播放器使用 `aspect-[9/16]`（竖屏 9:16），不使用 16:9。
+- 导航栏：桌面显示导航链接（`hidden md:flex`），移动端显示汉堡菜单（`md:hidden`）+ 抽屉。
+- 模态框：使用 `w-full max-w-[Xpx] mx-4 md:mx-0`，移动端两侧留 16px 间距。
+- 剧集详情页：移动端单列（`flex-col`），桌面端左视频（`lg:max-w-[400px]`）+ 右侧边栏（`lg:flex`）。
+- EpisodeSelector：桌面使用 `variant="sidebar"`（336px 面板），移动端使用 `variant="inline"`（8 列网格）。
+- 首页 Hero：移动端内容从 `left-4 right-4 bottom-14` 定位，桌面端从 `lg:left-[72px] lg:bottom-[120px]`；箭头按钮 `hidden lg:flex`；描述文字 `line-clamp-2 lg:line-clamp-none`。
+- InnerPage（关于/业务/联系）：内容区 `px-4 md:px-[60px]`，最大宽 `max-w-[860px] mx-auto`。
+
 ## 测试规范
 
 - 新增共享逻辑必须有单元测试。

@@ -10,6 +10,18 @@ const CloseIcon = () => (
   </svg>
 );
 
+const CheckIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
 const benefits = [
   { icon: '▶', label: '全站短剧免费观看' },
   { icon: '◈', label: '高清画质畅享' },
@@ -24,17 +36,19 @@ const planSubtitles: Record<string, string> = {
   '365d': '年度特惠',
 };
 
-const ShieldIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
+function getGridCols(count: number): string {
+  if (count === 1) return '1fr';
+  if (count === 2) return '1fr 1fr';
+  if (count >= 4) return '1fr 1fr';
+  return '1fr 1fr 1fr';
+}
 
 const VipModal: React.FC = () => {
   const { closeModal, selectPlan } = useApp();
   const [plans, setPlans] = useState<VipPlan[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,44 +67,41 @@ const VipModal: React.FC = () => {
           }>;
         }>('/api/membership/plans');
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
-        setPlans(
-          data.plans.map((plan) => {
-            const price = plan.priceCents / 100;
-            const months = plan.durationDays / 30;
-            return {
-              id: plan.code,
-              code: plan.code,
-              name: plan.name,
-              price,
-              period: plan.durationDays >= 365 ? '年' : plan.durationDays >= 90 ? '3个月' : '月',
-              durationDays: plan.durationDays,
-              priceCents: plan.priceCents,
-              pricePerMonth: months > 1 ? Number((price / months).toFixed(1)) : price,
-              recommended: plan.recommended,
-            };
-          }),
-        );
+        const mapped = data.plans.map((plan) => {
+          const price = plan.priceCents / 100;
+          const months = plan.durationDays / 30;
+          return {
+            id: plan.code,
+            code: plan.code,
+            name: plan.name,
+            price,
+            period: plan.durationDays >= 365 ? '年' : plan.durationDays >= 90 ? '3个月' : '月',
+            durationDays: plan.durationDays,
+            priceCents: plan.priceCents,
+            pricePerMonth: months > 1 ? Number((price / months).toFixed(1)) : price,
+            recommended: plan.recommended,
+          };
+        });
+
+        setPlans(mapped);
+        const rec = mapped.find((p) => p.recommended) ?? mapped[0];
+        if (rec) setActivePlanId(rec.id);
       } catch (requestError) {
         if (!cancelled) {
           setError(requestError instanceof Error ? requestError.message : '会员套餐加载失败');
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
     void loadPlans();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
+
+  const activePlan = plans.find((p) => p.id === activePlanId);
 
   return (
     <Overlay onClick={closeModal}>
@@ -143,107 +154,144 @@ const VipModal: React.FC = () => {
         </div>
 
         {/* Plans */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 22 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: loading || error ? '1fr' : getGridCols(plans.length),
+          gap: 12,
+          marginBottom: 22,
+        }}>
           {loading && (
-            <div style={statusCardStyle}>
-              正在加载会员套餐...
-            </div>
+            <div style={statusCardStyle}>正在加载会员套餐...</div>
           )}
           {!loading && error && (
-            <div style={statusCardStyle}>
-              {error}
-            </div>
+            <div style={statusCardStyle}>{error}</div>
           )}
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              style={{
-                borderRadius: 8,
-                border: plan.recommended
-                  ? `1.5px solid rgba(201,145,42,0.7)`
-                  : '1px solid rgba(240,237,232,0.1)',
-                background: plan.recommended
-                  ? 'linear-gradient(180deg, rgba(201,145,42,0.12) 0%, rgba(201,145,42,0.06) 100%)'
-                  : 'rgba(240,237,232,0.03)',
-                padding: '22px 16px 18px',
-                textAlign: 'center',
-                position: 'relative',
-              }}
-            >
-              {/* Recommended badge */}
-              {plan.recommended && (
-                <div style={{
-                  position: 'absolute', top: -1, right: 16,
-                  background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
-                  color: '#1a0f00', fontSize: 10, fontWeight: 600,
-                  padding: '2px 8px', borderRadius: '0 0 4px 4px',
-                  fontFamily: tokens.fontBody, letterSpacing: '0.06em',
-                }}>
-                  推荐
-                </div>
-              )}
-
-              <div style={{
-                fontFamily: tokens.fontDisplay, fontSize: 16,
-                color: tokens.textPrimary, letterSpacing: '0.08em', marginBottom: 4,
-              }}>
-                {plan.name}
-              </div>
-              <div style={{
-                fontFamily: tokens.fontBody, fontSize: 11,
-                color: tokens.textMuted, letterSpacing: '0.04em', marginBottom: 16,
-              }}>
-                {planSubtitles[plan.code] ?? '畅享会员权益'}
-              </div>
-
-              {/* Price */}
-              <div style={{ marginBottom: 6 }}>
-                <span style={{ fontFamily: tokens.fontCormorant, fontSize: 14, color: tokens.accentGold }}>¥</span>
-                <span style={{
-                  fontFamily: tokens.fontCormorant, fontSize: 42, fontWeight: 600,
-                  color: plan.recommended ? tokens.accentAmber : tokens.textPrimary,
-                  lineHeight: 1,
-                }}>
-                  {plan.price}
-                </span>
-                <span style={{ fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted }}>
-                  /{plan.period}
-                </span>
-              </div>
-
-              {plan.pricePerMonth && plan.id !== 'monthly' && (
-                <div style={{
-                  fontFamily: tokens.fontBody, fontSize: 11,
-                  color: tokens.textMuted, marginBottom: 16, letterSpacing: '0.04em',
-                }}>
-                  ¥{plan.pricePerMonth}/月
-                </div>
-              )}
-              {plan.durationDays <= 30 && <div style={{ height: 20, marginBottom: 0 }} />}
-
-              {/* CTA */}
-              <button
-                onClick={() => selectPlan(plan)}
+          {plans.map((plan) => {
+            const isActive = plan.id === activePlanId;
+            return (
+              <div
+                key={plan.id}
+                onClick={() => setActivePlanId(plan.id)}
                 style={{
-                  width: '100%', padding: '10px 0',
-                  background: plan.recommended
-                    ? 'linear-gradient(135deg, #C9912A, #d8a24d)'
-                    : 'none',
-                  border: plan.recommended
-                    ? 'none'
-                    : `1px solid rgba(201,145,42,0.5)`,
-                  borderRadius: 4, cursor: 'pointer',
-                  fontFamily: tokens.fontBody, fontSize: 13,
-                  color: plan.recommended ? '#1a0f00' : tokens.accentGold,
-                  letterSpacing: '0.1em', marginTop: 'auto',
-                  transition: 'all 0.2s ease',
+                  borderRadius: 8,
+                  border: isActive
+                    ? `1.5px solid rgba(201,145,42,0.85)`
+                    : '1px solid rgba(240,237,232,0.1)',
+                  background: isActive
+                    ? 'linear-gradient(180deg, rgba(201,145,42,0.14) 0%, rgba(201,145,42,0.07) 100%)'
+                    : 'rgba(240,237,232,0.03)',
+                  padding: '22px 16px 18px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s ease, background 0.2s ease',
                 }}
               >
-                立即开通
-              </button>
-            </div>
-          ))}
+                {/* Recommended badge */}
+                {plan.recommended && (
+                  <div style={{
+                    position: 'absolute', top: -1, right: 16,
+                    background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+                    color: '#1a0f00', fontSize: 10, fontWeight: 600,
+                    padding: '2px 8px', borderRadius: '0 0 4px 4px',
+                    fontFamily: tokens.fontBody, letterSpacing: '0.06em',
+                  }}>
+                    推荐
+                  </div>
+                )}
+
+                {/* Selected checkmark */}
+                {isActive && (
+                  <div style={{
+                    position: 'absolute', top: 8, left: 10,
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#1a0f00',
+                  }}>
+                    <CheckIcon />
+                  </div>
+                )}
+
+                <div style={{
+                  fontFamily: tokens.fontDisplay, fontSize: 16,
+                  color: tokens.textPrimary, letterSpacing: '0.08em', marginBottom: 4,
+                }}>
+                  {plan.name}
+                </div>
+                <div style={{
+                  fontFamily: tokens.fontBody, fontSize: 11,
+                  color: tokens.textMuted, letterSpacing: '0.04em', marginBottom: 16,
+                }}>
+                  {planSubtitles[plan.code] ?? '畅享会员权益'}
+                </div>
+
+                {/* Price */}
+                <div style={{ marginBottom: 6, lineHeight: 1 }}>
+                  <span style={{
+                    fontFamily: tokens.fontCormorant, fontSize: 15,
+                    color: isActive ? tokens.accentAmber : tokens.textMuted,
+                    verticalAlign: 'top', marginTop: 6, display: 'inline-block',
+                  }}>¥</span>
+                  <span style={{
+                    fontFamily: tokens.fontCormorant,
+                    fontSize: 44,
+                    fontWeight: 600,
+                    color: isActive ? tokens.accentAmber : tokens.textPrimary,
+                    fontVariantNumeric: 'tabular-nums',
+                    lineHeight: 1,
+                  }}>
+                    {plan.price}
+                  </span>
+                  <span style={{
+                    fontFamily: tokens.fontBody, fontSize: 12,
+                    color: tokens.textMuted, marginLeft: 2,
+                  }}>
+                    /{plan.period}
+                  </span>
+                </div>
+
+                {plan.pricePerMonth && plan.id !== 'monthly' ? (
+                  <div style={{
+                    fontFamily: tokens.fontBody, fontSize: 11,
+                    color: tokens.textMuted, letterSpacing: '0.04em',
+                    minHeight: 18,
+                  }}>
+                    ¥{plan.pricePerMonth}/月
+                  </div>
+                ) : (
+                  <div style={{ minHeight: 18 }} />
+                )}
+              </div>
+            );
+          })}
         </div>
+
+        {/* CTA */}
+        {!loading && !error && activePlan && (
+          <button
+            onClick={() => selectPlan(activePlan)}
+            style={{
+              width: '100%',
+              padding: '13px 0',
+              background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontFamily: tokens.fontBody,
+              fontSize: 15,
+              fontWeight: 600,
+              color: '#1a0f00',
+              letterSpacing: '0.12em',
+              marginBottom: 16,
+              transition: 'opacity 0.2s ease',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+          >
+            立即开通
+          </button>
+        )}
 
         {/* Footer */}
         <div style={{
@@ -294,8 +342,5 @@ const statusCardStyle: React.CSSProperties = {
   fontSize: 12,
   letterSpacing: '0.06em',
 };
-
-const { fontCormorant } = tokens;
-void fontCormorant;
 
 export default VipModal;

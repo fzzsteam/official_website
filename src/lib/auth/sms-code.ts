@@ -35,6 +35,10 @@ export async function createSmsCode(phone: string, requestIp?: string | null) {
     },
   });
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV] SMS code for ${normalizedPhone}: ${code}`);
+  }
+
   return {
     code,
     expiresAt: expiresAt.toISOString(),

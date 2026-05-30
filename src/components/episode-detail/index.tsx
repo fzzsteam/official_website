@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { tokens } from './tokens';
-import Navbar from './Navbar';
 import VideoPlayer from './VideoPlayer';
 import EpisodeInfo from './EpisodeInfo';
 import CastSection from './CastSection';
@@ -33,8 +32,14 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
   const [currentVideoSrc, setCurrentVideoSrc] = useState(videoSrc);
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
-  const { navigateTo, openModal } = useApp();
+  const { user, navigateTo, openModal } = useApp();
   const handleBack = onBack ?? (() => navigateTo('home'));
+
+  const handleSelectEpisode = (episode: number) => {
+    if (!user) { openModal('login'); return; }
+    if (!user.isVip) { openModal('vip'); return; }
+    setCurrentEpisode(episode);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -42,10 +47,10 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
       setPlayLoading(true);
       setPlayError('');
       try {
-        const data = await apiGet<{ url: string }>(
+        const data = await apiGet<{ playUrl: string }>(
           `/api/dramas/${encodeURIComponent(drama.id)}/episodes/${currentEpisode}/play-url`,
         );
-        if (!cancelled) setCurrentVideoSrc(data.url);
+        if (!cancelled) setCurrentVideoSrc(data.playUrl);
       } catch (requestError) {
         if (cancelled) return;
         setCurrentVideoSrc(undefined);
@@ -82,37 +87,34 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
         `,
       }} />
 
-      <Navbar />
-
       {/* Main layout: flex-col on mobile, flex-row on desktop */}
       <div className="flex flex-col lg:flex-row pt-[62px] relative z-[1] min-h-screen">
 
         {/* Left column */}
         <div className="flex-1 min-w-0 flex flex-col">
 
-          {/* Video — full-width on mobile, max 400px centered on desktop */}
-          <div className="w-full lg:max-w-[400px] lg:mx-auto">
+          {/* Video — full-width on mobile, full-width of left column on desktop */}
+          <div className="w-full">
             <VideoPlayer
               src={currentVideoSrc}
               poster={videoPoster}
               isVip={drama.isVip}
               onBack={handleBack}
-              backLabel="返回详情页"
+              backLabel="返回首页"
               isLoading={playLoading}
               errorMessage={playError}
             />
           </div>
 
-          {/* Info row */}
+          {/* Info: EpisodeInfo → CastSection stacked vertically */}
           <div
-            className="flex items-start px-4 md:px-5 pt-5"
-            style={{
-              gap: 32,
-              borderBottom: '1px solid rgba(240,237,232,0.07)',
-            }}
+            className="flex flex-col px-4 md:px-5"
+            style={{ borderBottom: '1px solid rgba(240,237,232,0.07)' }}
           >
             <EpisodeInfo drama={drama} currentEpisode={currentEpisode} />
-            <CastSection cast={cast} />
+            <div className="pt-4 pb-5" style={{ borderTop: '1px solid rgba(240,237,232,0.07)' }}>
+              <CastSection cast={cast} />
+            </div>
           </div>
 
           {/* EpisodeSelector inline — mobile only */}
@@ -120,14 +122,27 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
             <EpisodeSelector
               drama={drama}
               currentEpisode={currentEpisode}
-              onSelectEpisode={setCurrentEpisode}
+              onSelectEpisode={handleSelectEpisode}
               variant="inline"
             />
           </div>
 
           <Recommendations
             items={recommendations}
-            onSelect={(id) => console.log('Navigate to drama:', id)}
+            onSelect={(id) => {
+              const rec = recommendations.find(r => r.id === id);
+              navigateTo('episode-detail', {
+                id,
+                title: rec?.title ?? '',
+                coverUrl: rec?.coverUrl ?? '',
+                totalEpisodes: 0,
+                episodeDuration: 0,
+                year: new Date().getFullYear(),
+                genres: [],
+                description: '',
+                isVip: false,
+              });
+            }}
           />
         </div>
 
@@ -136,7 +151,7 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
           <EpisodeSelector
             drama={drama}
             currentEpisode={currentEpisode}
-            onSelectEpisode={setCurrentEpisode}
+            onSelectEpisode={handleSelectEpisode}
             variant="sidebar"
           />
         </div>
