@@ -1,5 +1,3 @@
-# 方直智胜官网
-
 ## 项目说明
 
 这是一个基于 `Vite + React + TypeScript` 的官网项目。
