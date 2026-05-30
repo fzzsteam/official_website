@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           String    @id @db.Char(36)
+  phone        String    @unique @db.VarChar(32)
+  nickname     String?   @db.VarChar(100)
+  avatarPath   String?   @map("avatar_path") @db.VarChar(255)
+  vipExpiredAt DateTime? @map("vip_expired_at") @db.DateTime(3)
+  status       String    @default("active") @db.VarChar(32)
+  lastLoginAt  DateTime? @map("last_login_at") @db.DateTime(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  orders       Order[]
+
+  @@map("users")
+}
+
+model SmsCode {
+  id         String    @id @db.Char(36)
+  phone      String    @db.VarChar(32)
+  codeHash   String    @map("code_hash") @db.VarChar(255)
+  purpose    String    @default("login") @db.VarChar(32)
+  expiresAt  DateTime  @map("expires_at") @db.DateTime(3)
+  consumedAt DateTime? @map("consumed_at") @db.DateTime(3)
+  requestIp  String?   @map("request_ip") @db.VarChar(64)
+  status     String    @default("pending") @db.VarChar(32)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([phone, purpose], name: "idx_sms_codes_phone_purpose")
+  @@index([expiresAt], name: "idx_sms_codes_expires_at")
+  @@map("sms_codes")
+}
+
+model MembershipPlan {
+  id           String   @id @db.Char(36)
+  code         String   @unique @db.VarChar(64)
+  name         String   @db.VarChar(100)
+  durationDays Int      @map("duration_days")
+  priceCents   Int      @map("price_cents")
+  enabled      Boolean  @default(true) @db.TinyInt
+  sortOrder    Int      @default(0) @map("sort_order")
+  description  String?  @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  orders       Order[]
+
+  @@map("membership_plans")
+}
+
+model Order {
+  id                         String                      @id @db.Char(36)
+  orderNo                    String                      @unique @map("order_no") @db.VarChar(64)
+  userId                     String                      @map("user_id") @db.Char(36)
+  membershipPlanId           String?                     @map("membership_plan_id") @db.Char(36)
+  totalCents                 Int                         @map("total_cents")
+  paidCents                  Int                         @default(0) @map("paid_cents")
+  status                     String                      @default("pending") @db.VarChar(32)
+  paymentChannel             String                      @default("wechat_native") @map("payment_channel") @db.VarChar(32)
+  paidAt                     DateTime?                   @map("paid_at") @db.DateTime(3)
+  closedAt                   DateTime?                   @map("closed_at") @db.DateTime(3)
+  description                String?                     @db.VarChar(255)
+  createdAt                  DateTime                    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                  DateTime                    @updatedAt @map("updated_at") @db.DateTime(3)
+  user                       User                        @relation(fields: [userId], references: [id])
+  membershipPlan             MembershipPlan?             @relation(fields: [membershipPlanId], references: [id])
+  wechatPaymentNotifications WechatPaymentNotification[]
+
+  @@index([userId], name: "idx_orders_user_id")
+  @@index([membershipPlanId], name: "idx_orders_membership_plan_id")
+  @@map("orders")
+}
+
+model WechatPaymentNotification {
+  id             String    @id @db.Char(36)
+  orderId        String    @map("order_id") @db.Char(36)
+  orderNo        String    @map("order_no") @db.VarChar(64)
+  transactionId  String    @unique @map("transaction_id") @db.VarChar(64)
+  eventType      String    @map("event_type") @db.VarChar(64)
+  eventId        String    @unique @map("event_id") @db.VarChar(128)
+  resourceType   String?   @map("resource_type") @db.VarChar(64)
+  rawPayloadJson Json      @map("raw_payload_json")
+  processed      Boolean   @default(false) @db.TinyInt
+  processedAt    DateTime? @map("processed_at") @db.DateTime(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  order          Order     @relation(fields: [orderId], references: [id])
+
+  @@index([orderId], name: "idx_wechat_payment_notifications_order_id")
+  @@map("wechat_payment_notifications")
+}
+
+model Drama {
+  id              String           @id @db.Char(36)
+  slug            String           @unique @db.VarChar(128)
+  title           String           @db.VarChar(150)
+  subtitle        String?          @db.VarChar(255)
+  synopsis        String?          @db.Text
+  coverPath       String           @map("cover_path") @db.VarChar(255)
+  posterPath      String?          @map("poster_path") @db.VarChar(255)
+  trailerPath     String?          @map("trailer_path") @db.VarChar(255)
+  status          String           @default("draft") @db.VarChar(32)
+  releaseStatus   String           @default("upcoming") @map("release_status") @db.VarChar(32)
+  publishedAt     DateTime?        @map("published_at") @db.DateTime(3)
+  sortOrder       Int              @default(0) @map("sort_order")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  genres          DramaGenre[]
+  episodes        Episode[]
+  castMembers     CastMember[]
+  recommendations Recommendation[]
+
+  @@map("dramas")
+}
+
+model DramaGenre {
+  id        String   @id @db.Char(36)
+  dramaId   String   @map("drama_id") @db.Char(36)
+  genreCode String   @map("genre_code") @db.VarChar(64)
+  genreName String   @map("genre_name") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  drama     Drama    @relation(fields: [dramaId], references: [id])
+
+  @@unique([dramaId, genreCode], name: "uk_drama_genres_drama_genre")
+  @@map("drama_genres")
+}
+
+model Episode {
+  id              String    @id @db.Char(36)
+  dramaId         String    @map("drama_id") @db.Char(36)
+  episodeNo       Int       @map("episode_no")
+  title           String    @db.VarChar(150)
+  summary         String?   @db.Text
+  videoPath       String    @map("video_path") @db.VarChar(255)
+  coverPath       String?   @map("cover_path") @db.VarChar(255)
+  durationSeconds Int       @default(0) @map("duration_seconds")
+  accessLevel     String    @default("member") @map("access_level") @db.VarChar(32)
+  status          String    @default("draft") @db.VarChar(32)
+  publishedAt     DateTime? @map("published_at") @db.DateTime(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  drama           Drama     @relation(fields: [dramaId], references: [id])
+
+  @@unique([dramaId, episodeNo], name: "uk_episodes_drama_episode")
+  @@index([dramaId], name: "idx_episodes_drama_id")
+  @@map("episodes")
+}
+
+model CastMember {
+  id         String   @id @db.Char(36)
+  dramaId    String   @map("drama_id") @db.Char(36)
+  name       String   @db.VarChar(100)
+  roleName   String?  @map("role_name") @db.VarChar(100)
+  avatarPath String?  @map("avatar_path") @db.VarChar(255)
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  drama      Drama    @relation(fields: [dramaId], references: [id])
+
+  @@index([dramaId], name: "idx_cast_members_drama_id")
+  @@map("cast_members")
+}
+
+model Recommendation {
+  id                 String   @id @db.Char(36)
+  dramaId            String   @map("drama_id") @db.Char(36)
+  recommendationType String   @default("homepage") @map("recommendation_type") @db.VarChar(32)
+  sortOrder          Int      @default(0) @map("sort_order")
+  enabled            Boolean  @default(true) @db.TinyInt
+  createdAt          DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  drama              Drama    @relation(fields: [dramaId], references: [id])
+
+  @@unique([recommendationType, dramaId], name: "uk_recommendations_type_drama")
+  @@map("recommendations")
+}

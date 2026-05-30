@@ -1,6 +1,13 @@
 .git
 .DS_Store
 node_modules
-npm-debug.log
+dist
+.next
+*.tsbuildinfo
+*.log
+.env
+.env.local
+.env*.local
+.cache
 docs
 test

@@ -1,0 +1,42 @@
+/* 本地字体（通过 npm 安装，构建时无需访问 Google） */
+@import '@fontsource/noto-sans-sc/300.css';
+@import '@fontsource/noto-sans-sc/400.css';
+@import '@fontsource/noto-sans-sc/500.css';
+@import '@fontsource/zcool-qingke-huangyou/400.css';
+@import '@fontsource/cinzel/400.css';
+@import '@fontsource/cinzel/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Font system (3 roles):
+ * --font-display  ZCOOL QingKe HuangYou  中文品牌标题
+ * --font-body     Noto Sans SC            中文正文 / UI
+ * --font-accent   Cinzel                  数字 + 英文装饰标签（全大写场景）
+ */
+:root {
+  --font-display: 'ZCOOL QingKe HuangYou';
+  --font-body: 'Noto Sans SC';
+  --font-accent: 'Cinzel';
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #1a140f;
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
