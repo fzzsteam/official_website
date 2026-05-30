@@ -51,6 +51,6 @@ export async function POST(request: Request) {
       return fail('INVALID_PHONE', '手机号格式错误', 400);
     }
 
-    return fail('LOGIN_FAILED', '登录失败', 500);
+    return fail('LOGIN_FAILED', '登录失败', 500, error);
   }
 }

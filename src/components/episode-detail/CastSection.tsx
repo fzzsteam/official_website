@@ -28,7 +28,7 @@ const CastSection: React.FC<CastSectionProps> = ({ cast, onViewAll }) => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{
-          fontFamily: tokens.fontCormorant,
+          fontFamily: tokens.fontAccent,
           fontSize: 13, fontWeight: 500, letterSpacing: '0.22em',
           color: tokens.textPrimary, margin: 0, textTransform: 'uppercase',
         }}>

@@ -55,7 +55,7 @@ const pageBackgroundStyle: React.CSSProperties = {
 };
 
 const pageLabelStyle: React.CSSProperties = {
-  fontFamily: tokens.fontCormorant,
+  fontFamily: tokens.fontAccent,
   fontSize: 11,
   letterSpacing: '0.38em',
   color: tokens.accentGold,
@@ -82,7 +82,7 @@ const sectionStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: tokens.fontCormorant,
+  fontFamily: tokens.fontAccent,
   fontSize: 11,
   letterSpacing: '0.32em',
   color: tokens.accentGold,
@@ -103,7 +103,7 @@ const sectionBodyStyle: React.CSSProperties = {
 const infoLabelStyle: React.CSSProperties = {
   minWidth: 88,
   color: tokens.textMuted,
-  fontFamily: tokens.fontCormorant,
+  fontFamily: tokens.fontAccent,
   letterSpacing: '0.12em',
   fontSize: 12,
   flexShrink: 0,

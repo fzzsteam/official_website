@@ -229,16 +229,18 @@ const VipModal: React.FC = () => {
                 {/* Price */}
                 <div style={{ marginBottom: 6, lineHeight: 1 }}>
                   <span style={{
-                    fontFamily: tokens.fontCormorant, fontSize: 15,
+                    fontFamily: tokens.fontAccent, fontSize: 13,
                     color: isActive ? tokens.accentAmber : tokens.textMuted,
-                    verticalAlign: 'top', marginTop: 6, display: 'inline-block',
+                    verticalAlign: 'top', marginTop: 8, display: 'inline-block',
+                    letterSpacing: '0.02em',
                   }}>¥</span>
                   <span style={{
-                    fontFamily: tokens.fontCormorant,
-                    fontSize: 44,
+                    fontFamily: tokens.fontAccent,
+                    fontSize: 40,
                     fontWeight: 600,
                     color: isActive ? tokens.accentAmber : tokens.textPrimary,
                     fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '0.02em',
                     lineHeight: 1,
                   }}>
                     {plan.price}

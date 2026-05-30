@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     });
 
     return ok(result);
-  } catch {
-    return fail('WECHAT_NOTIFY_FAILED', '处理微信支付回调失败', 500);
+  } catch (error) {
+    return fail('WECHAT_NOTIFY_FAILED', '处理微信支付回调失败', 500, error);
   }
 }

@@ -264,7 +264,7 @@ const HomePage: React.FC = () => {
           marginBottom: 24,
         }}>
           <h2 style={{
-            fontFamily: tokens.fontCormorant, fontSize: 18, fontWeight: 500,
+            fontFamily: tokens.fontAccent, fontSize: 18, fontWeight: 500,
             color: tokens.accentGold, letterSpacing: '0.2em', margin: 0,
           }}>
             热门推荐

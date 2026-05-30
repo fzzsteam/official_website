@@ -9,6 +9,9 @@ interface VideoPlayerProps {
   backLabel?: string;
   isLoading?: boolean;
   errorMessage?: string;
+  autoPlay?: boolean;
+  onPlayStateChange?: (playing: boolean) => void;
+  onEnded?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -83,9 +86,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   backLabel = '返回首页',
   isLoading = false,
   errorMessage = '',
+  autoPlay = false,
+  onPlayStateChange,
+  onEnded,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Use refs for callbacks and autoPlay to avoid stale closures in event listeners
+  const autoPlayRef = useRef(autoPlay);
+  const hasAutoPlayedRef = useRef(false);
+  const onPlayStateChangeRef = useRef(onPlayStateChange);
+  const onEndedRef = useRef(onEnded);
+  useEffect(() => { autoPlayRef.current = autoPlay; }, [autoPlay]);
+  useEffect(() => { onPlayStateChangeRef.current = onPlayStateChange; }, [onPlayStateChange]);
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [videoAspect, setVideoAspect] = useState<string | null>(null);
@@ -129,6 +143,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setPlaybackRate(1);
     setShowSpeedMenu(false);
     setVideoAspect(null);
+    hasAutoPlayedRef.current = false;
   }, [src]);
 
   // Sync with real video element
@@ -137,13 +152,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!video) return;
     const onTimeUpdate = () => setCurrentTime(video.currentTime);
     const onDurationChange = () => setDuration(video.duration);
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onCanPlay = () => setIsVideoReady(true);
+    const onPlay = () => {
+      setIsPlaying(true);
+      onPlayStateChangeRef.current?.(true);
+    };
+    const onPause = () => {
+      setIsPlaying(false);
+      onPlayStateChangeRef.current?.(false);
+    };
+    const onCanPlay = () => {
+      setIsVideoReady(true);
+      if (autoPlayRef.current && !hasAutoPlayedRef.current) {
+        hasAutoPlayedRef.current = true;
+        video.play().catch(() => {});
+      }
+    };
     const onLoadedMetadata = () => {
       if (video.videoWidth && video.videoHeight) {
         setVideoAspect(`${video.videoWidth}/${video.videoHeight}`);
       }
+    };
+    const onVideoEnded = () => {
+      setIsPlaying(false);
+      onPlayStateChangeRef.current?.(false);
+      onEndedRef.current?.();
     };
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('durationchange', onDurationChange);
@@ -151,6 +183,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     video.addEventListener('pause', onPause);
     video.addEventListener('canplay', onCanPlay);
     video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('ended', onVideoEnded);
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('durationchange', onDurationChange);
@@ -158,6 +191,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       video.removeEventListener('pause', onPause);
       video.removeEventListener('canplay', onCanPlay);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('ended', onVideoEnded);
     };
   }, []);
 
@@ -345,25 +379,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {(isLoading || errorMessage) && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 9,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.42)',
-            color: tokens.textPrimary,
-            fontFamily: tokens.fontBody,
-            fontSize: 14,
-            letterSpacing: '0.08em',
-          }}
-        >
-          {isLoading ? '剧集加载中...' : errorMessage}
-        </div>
-      )}
+      {(() => {
+        const isBuffering = !!src && !isVideoReady && !errorMessage;
+        const showLoading = isLoading || isBuffering;
+        if (!showLoading && !errorMessage) return null;
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 9,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: showLoading
+                ? 'rgba(0,0,0,0.55)'
+                : 'linear-gradient(rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
+              color: tokens.textPrimary,
+              fontFamily: tokens.fontBody,
+              fontSize: 14,
+              letterSpacing: '0.08em',
+              textShadow: '0 1px 8px rgba(0,0,0,0.8)',
+            }}
+          >
+            {showLoading ? '剧集加载中...' : errorMessage}
+          </div>
+        );
+      })()}
 
       {/* Bottom gradient + controls */}
       <div

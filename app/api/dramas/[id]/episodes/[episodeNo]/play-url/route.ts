@@ -36,6 +36,6 @@ export async function GET(_request: Request, { params }: PlayUrlRouteContext) {
       return fail('EPISODE_NOT_FOUND', '剧集不存在', 404);
     }
 
-    return fail('PLAY_URL_FETCH_FAILED', '播放地址获取失败', 500);
+    return fail('PLAY_URL_FETCH_FAILED', '播放地址获取失败', 500, error);
   }
 }

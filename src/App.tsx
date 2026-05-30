@@ -28,6 +28,7 @@ function apiDramaToLegacy(d: ApiDramaDetail): Drama {
     genres: d.genreNames,
     description: d.synopsis ?? '',
     coverUrl: d.coverUrl,
+    posterUrl: d.posterUrl ?? undefined,
     isVip: d.releaseStatus === 'released',
   };
 }

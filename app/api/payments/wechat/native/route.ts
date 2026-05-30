@@ -30,6 +30,6 @@ export async function POST(request: Request) {
       return fail('PLAN_NOT_FOUND', '会员套餐不存在或不可用', 404);
     }
 
-    return fail('WECHAT_NATIVE_ORDER_CREATE_FAILED', '创建微信支付订单失败', 500);
+    return fail('WECHAT_NATIVE_ORDER_CREATE_FAILED', '创建微信支付订单失败', 500, error);
   }
 }

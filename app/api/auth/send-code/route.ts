@@ -21,6 +21,6 @@ export async function POST(request: Request) {
       return fail('INVALID_PHONE', '手机号格式错误', 400);
     }
 
-    return fail('SMS_SEND_FAILED', '验证码发送失败', 400);
+    return fail('SMS_SEND_FAILED', '验证码发送失败', 400, error);
   }
 }

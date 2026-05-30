@@ -8,6 +8,7 @@ export interface Drama {
   genres: string[];
   description: string;
   coverUrl: string;
+  posterUrl?: string;
   isVip: boolean;
 }
 

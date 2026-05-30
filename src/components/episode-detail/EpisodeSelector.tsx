@@ -15,9 +15,11 @@ const ChevronRightIcon = () => (
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
-const PauseSmIcon = () => (
-  <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-    <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+const DotsIcon = () => (
+  <svg width="14" height="4" viewBox="0 0 14 4" fill="currentColor">
+    <circle cx="2" cy="2" r="1.5" />
+    <circle cx="7" cy="2" r="1.5" />
+    <circle cx="12" cy="2" r="1.5" />
   </svg>
 );
 
@@ -60,7 +62,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         }}
       >
         {ep}
-        {isActive && <PauseSmIcon />}
+        {isActive && <DotsIcon />}
       </button>
     );
   };
@@ -73,7 +75,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       >
         <div className="flex items-center justify-between mb-3">
           <span style={{
-            fontFamily: tokens.fontCormorant,
+            fontFamily: tokens.fontAccent,
             fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase',
             color: tokens.textPrimary,
           }}>
@@ -156,7 +158,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         borderBottom: '1px solid rgba(240,237,232,0.07)',
       }}>
         <span style={{
-          fontFamily: tokens.fontCormorant,
+          fontFamily: tokens.fontAccent,
           fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase',
           color: tokens.textPrimary,
         }}>

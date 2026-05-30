@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       orderNo: order.orderNo,
       status: order.status,
     });
-  } catch {
-    return fail('WECHAT_ORDER_STATUS_FAILED', '查询订单状态失败', 500);
+  } catch (error) {
+    return fail('WECHAT_ORDER_STATUS_FAILED', '查询订单状态失败', 500, error);
   }
 }

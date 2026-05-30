@@ -19,6 +19,9 @@ loadEnvFile('.env.local');
 loadEnvFile('.env');
 
 export default defineConfig({
+  migrations: {
+    seed: 'npx tsx prisma/seed.ts',
+  },
   datasource: {
     url: process.env.DATABASE_URL,
   },

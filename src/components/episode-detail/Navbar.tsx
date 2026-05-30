@@ -61,16 +61,15 @@ const Navbar: React.FC<NavbarProps> = () => {
       <nav
         className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-4 md:px-11 py-[18px]"
         style={{
-          background: 'linear-gradient(to bottom, rgba(20,15,10,0.96) 0%, rgba(20,15,10,0.7) 100%)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(240,237,232,0.05)',
+          background: 'linear-gradient(to bottom, rgba(20,15,10,0.82) 0%, rgba(20,15,10,0) 100%)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         {/* Brand */}
         <button
           onClick={() => navigateTo('home')}
           style={{
-            fontFamily: tokens.fontCormorant,
+            fontFamily: tokens.fontAccent,
             fontSize: 15, fontWeight: 400,
             letterSpacing: '0.28em',
             color: tokens.textPrimary,

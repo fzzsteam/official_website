@@ -31,7 +31,7 @@ export async function GET() {
         vipExpiredAt: user.vipExpiredAt ? user.vipExpiredAt.toISOString() : null,
       },
     });
-  } catch {
-    return fail('AUTH_CHECK_FAILED', '登录状态获取失败', 500);
+  } catch (error) {
+    return fail('AUTH_CHECK_FAILED', '登录状态获取失败', 500, error);
   }
 }

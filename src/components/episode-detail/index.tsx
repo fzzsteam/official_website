@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { tokens } from './tokens';
 import VideoPlayer from './VideoPlayer';
 import EpisodeInfo from './EpisodeInfo';
@@ -32,14 +32,32 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
   const [currentVideoSrc, setCurrentVideoSrc] = useState(videoSrc);
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
+  const [autoPlay, setAutoPlay] = useState(false);
+  const isPlayingRef = useRef(false);
+  const currentEpisodeRef = useRef(currentEpisode);
+  useEffect(() => { currentEpisodeRef.current = currentEpisode; }, [currentEpisode]);
+
   const { user, navigateTo, openModal } = useApp();
   const handleBack = onBack ?? (() => navigateTo('home'));
 
   const handleSelectEpisode = (episode: number) => {
     if (!user) { openModal('login'); return; }
     if (!user.isVip) { openModal('vip'); return; }
+    setAutoPlay(isPlayingRef.current);
     setCurrentEpisode(episode);
   };
+
+  const handlePlayStateChange = useCallback((playing: boolean) => {
+    isPlayingRef.current = playing;
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    const ep = currentEpisodeRef.current;
+    if (ep < drama.totalEpisodes) {
+      setAutoPlay(true);
+      setCurrentEpisode(ep + 1);
+    }
+  }, [drama.totalEpisodes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,12 +115,15 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
           <div className="w-full">
             <VideoPlayer
               src={currentVideoSrc}
-              poster={videoPoster}
+              poster={videoPoster ?? drama.posterUrl}
               isVip={drama.isVip}
               onBack={handleBack}
               backLabel="返回首页"
               isLoading={playLoading}
               errorMessage={playError}
+              autoPlay={autoPlay}
+              onPlayStateChange={handlePlayStateChange}
+              onEnded={handleEnded}
             />
           </div>
 

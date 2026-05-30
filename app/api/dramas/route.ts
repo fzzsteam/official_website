@@ -8,7 +8,7 @@ export async function GET() {
     const dramas = await getPublishedDramas();
 
     return ok({ dramas });
-  } catch {
-    return fail('DRAMAS_FETCH_FAILED', '短剧列表获取失败', 500);
+  } catch (error) {
+    return fail('DRAMAS_FETCH_FAILED', '短剧列表获取失败', 500, error);
   }
 }

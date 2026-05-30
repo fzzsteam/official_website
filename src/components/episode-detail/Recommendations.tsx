@@ -31,7 +31,7 @@ const Recommendations: React.FC<RecommendationsProps> = ({ items, onSelect }) =>
     <section className="pt-6 pb-8 md:pt-8 md:pb-10">
       <div className="flex items-center justify-between mb-[18px] pl-4 md:pl-5">
         <h2 style={{
-          fontFamily: tokens.fontCormorant,
+          fontFamily: tokens.fontAccent,
           fontSize: 13, fontWeight: 500,
           letterSpacing: '0.28em', textTransform: 'uppercase',
           color: tokens.textPrimary, margin: 0,

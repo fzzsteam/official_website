@@ -15,6 +15,10 @@
   "dependencies": {
     "@alicloud/dysmsapi20170525": "^3.1.1",
     "@alicloud/openapi-client": "^0.4.15",
+    "@fontsource/cinzel": "^5.2.8",
+    "@fontsource/cormorant-garamond": "^5.2.11",
+    "@fontsource/noto-sans-sc": "^5.2.9",
+    "@fontsource/zcool-qingke-huangyou": "^5.2.8",
     "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "ali-oss": "^6.22.0",

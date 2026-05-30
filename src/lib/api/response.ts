@@ -15,6 +15,9 @@ export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json<ApiSuccessBody<T>>({ data }, init);
 }
 
-export function fail(code: string, message: string, status = 400) {
+export function fail(code: string, message: string, status = 400, cause?: unknown) {
+  if (cause !== undefined) {
+    console.error(`[API] ${code}:`, cause);
+  }
   return NextResponse.json<ApiErrorBody>({ error: { code, message } }, { status });
 }

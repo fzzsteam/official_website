@@ -19,6 +19,6 @@ export async function GET(_request: Request, { params }: DramaRouteContext) {
       return fail('DRAMA_NOT_FOUND', '短剧不存在', 404);
     }
 
-    return fail('DRAMA_FETCH_FAILED', '短剧详情获取失败', 500);
+    return fail('DRAMA_FETCH_FAILED', '短剧详情获取失败', 500, error);
   }
 }

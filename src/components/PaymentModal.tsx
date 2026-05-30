@@ -235,8 +235,9 @@ const PaymentModal: React.FC = () => {
             </div>
           </div>
           <div style={{
-            fontFamily: tokens.fontCormorant, fontSize: 28, fontWeight: 600,
+            fontFamily: tokens.fontAccent, fontSize: 26, fontWeight: 600,
             color: tokens.accentAmber, fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '0.04em',
           }}>
             ¥{selectedPlan.price.toFixed(2)}
           </div>
@@ -249,7 +250,7 @@ const PaymentModal: React.FC = () => {
           letterSpacing: '0.04em',
         }}>
           请在{' '}
-          <span style={{ color: tokens.accentGold, fontWeight: 500, fontFamily: tokens.fontCormorant, fontSize: 16, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: tokens.accentGold, fontWeight: 600, fontFamily: tokens.fontAccent, fontSize: 15, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.06em' }}>
             {formatTime(timeLeft)}
           </span>
           {' '}内完成支付
