@@ -22,7 +22,6 @@ export async function createSession(userId: string) {
   cookies().set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: SESSION_MAX_AGE,
   });
@@ -32,7 +31,6 @@ export function clearSession() {
   cookies().set(SESSION_COOKIE_NAME, '', {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: 0,
   });
