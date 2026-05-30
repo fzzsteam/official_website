@@ -27,3 +27,9 @@ test('postcss.config.js exists', () => {
     'postcss.config.js should exist'
   );
 });
+
+test('Navbar uses Tailwind responsive classes for mobile/desktop', () => {
+  const src = read('src/components/episode-detail/Navbar.tsx');
+  assert.match(src, /hidden md:flex/, 'nav links should be hidden on mobile with md:flex');
+  assert.match(src, /md:hidden/, 'hamburger should be hidden on desktop');
+});

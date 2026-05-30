@@ -35,6 +35,18 @@ const ChevronDownIcon = () => (
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
+const HamburgerIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+const CloseMenuIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 
 const navLinks: Array<{ label: string; page?: PageType; modal?: Exclude<ModalType, 'none'> }> = [
   { label: '首页', page: 'home' },
@@ -48,165 +60,183 @@ const navLinks: Array<{ label: string; page?: PageType; modal?: Exclude<ModalTyp
 const Navbar: React.FC<NavbarProps> = ({ onSearch, onHistory }) => {
   const { user, page, navigateTo, openModal } = useApp();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleNavClick = (link: typeof navLinks[0]) => {
-    if (link.modal) {
-      openModal(link.modal);
-      return;
-    }
+    setMenuOpen(false);
+    if (link.modal) { openModal(link.modal); return; }
     if (link.page) navigateTo(link.page);
   };
 
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        zIndex: 200,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '18px 44px',
-        background: 'linear-gradient(to bottom, rgba(20,15,10,0.96) 0%, rgba(20,15,10,0.7) 100%)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(240,237,232,0.05)',
-      }}
-    >
-      {/* Brand */}
-      <button
-        onClick={() => navigateTo('home')}
+    <>
+      <nav
+        className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-4 md:px-11 py-[18px]"
         style={{
-          fontFamily: tokens.fontCormorant,
-          fontSize: 15, fontWeight: 400,
-          letterSpacing: '0.28em',
-          color: tokens.textPrimary,
-          background: 'none', border: 'none',
-          textTransform: 'uppercase', cursor: 'pointer',
-          flexShrink: 0, padding: 0,
-          transition: 'color 0.3s ease',
+          background: 'linear-gradient(to bottom, rgba(20,15,10,0.96) 0%, rgba(20,15,10,0.7) 100%)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(240,237,232,0.05)',
         }}
       >
-        方直智胜
-      </button>
-
-      {/* Nav Links */}
-      <ul style={{ display: 'flex', gap: 28, listStyle: 'none', margin: '0 32px', padding: 0 }}>
-        {navLinks.map((link) => (
-          <li key={link.label}>
-            <button
-              onClick={() => handleNavClick(link)}
-              style={{
-                fontFamily: tokens.fontBody,
-                fontSize: 12, fontWeight: 300,
-                letterSpacing: '0.12em',
-                color: (link.label === '短剧' ? page === 'episode-detail' : link.page === page)
-                  ? tokens.textPrimary
-                  : tokens.textMuted,
-                background: 'none', border: 'none',
-                cursor: 'pointer', padding: 0,
-                transition: 'color 0.3s ease',
-              }}
-            >
-              {link.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {/* Right Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        {/* Search */}
+        {/* Brand */}
         <button
-          onClick={onSearch}
-          style={iconBtnStyle}
+          onClick={() => navigateTo('home')}
+          style={{
+            fontFamily: tokens.fontCormorant,
+            fontSize: 15, fontWeight: 400,
+            letterSpacing: '0.28em',
+            color: tokens.textPrimary,
+            background: 'none', border: 'none',
+            textTransform: 'uppercase', cursor: 'pointer',
+            flexShrink: 0, padding: 0,
+          }}
         >
-          <NavSearchIcon />
-          <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>
-            搜索剧名/演员
-          </span>
+          方直智胜
         </button>
 
-        {/* Watch History */}
-        <button onClick={onHistory} style={iconBtnStyle}>
-          <HistoryIcon />
-          <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>
-            观看历史
-          </span>
-        </button>
+        {/* Nav links — desktop only */}
+        <ul className="hidden md:flex gap-7 list-none m-0 mx-8 p-0">
+          {navLinks.map((link) => (
+            <li key={link.label}>
+              <button
+                onClick={() => handleNavClick(link)}
+                style={{
+                  fontFamily: tokens.fontBody,
+                  fontSize: 12, fontWeight: 300,
+                  letterSpacing: '0.12em',
+                  color: (link.label === '短剧' ? page === 'episode-detail' : link.page === page)
+                    ? tokens.textPrimary : tokens.textMuted,
+                  background: 'none', border: 'none',
+                  cursor: 'pointer', padding: 0,
+                }}
+              >
+                {link.label}
+              </button>
+            </li>
+          ))}
+        </ul>
 
-        {/* User area */}
-        {user ? (
-          <div style={{ position: 'relative' }}>
+        {/* Right actions */}
+        <div className="flex items-center gap-4">
+          {/* Search + History — desktop only */}
+          <button onClick={onSearch} className="hidden md:flex items-center gap-1.5" style={iconBtnStyle}>
+            <NavSearchIcon />
+            <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>搜索剧名/演员</span>
+          </button>
+          <button onClick={onHistory} className="hidden md:flex items-center gap-1.5" style={iconBtnStyle}>
+            <HistoryIcon />
+            <span style={{ fontFamily: tokens.fontBody, fontSize: 12, letterSpacing: '0.08em' }}>观看历史</span>
+          </button>
+
+          {/* User area */}
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen((o) => !o)}
+                className="flex items-center gap-2"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                <div style={{
+                  width: 30, height: 30, borderRadius: '50%',
+                  background: user.isVip
+                    ? 'linear-gradient(135deg, rgba(201,145,42,0.3), rgba(201,145,42,0.15))'
+                    : 'rgba(240,237,232,0.1)',
+                  border: `1px solid ${user.isVip ? 'rgba(201,145,42,0.5)' : 'rgba(240,237,232,0.2)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: user.isVip ? tokens.accentGold : tokens.textMuted, flexShrink: 0,
+                }}>
+                  <UserIcon />
+                </div>
+                <span className="hidden md:inline" style={{ fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted, letterSpacing: '0.06em' }}>
+                  {user.phone}
+                </span>
+                {user.isVip && (
+                  <span className="hidden md:inline-flex items-center gap-1" style={{
+                    background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+                    color: '#1a0f00', fontSize: 9, fontWeight: 600,
+                    padding: '2px 6px', borderRadius: 2,
+                    fontFamily: tokens.fontBody, letterSpacing: '0.08em',
+                  }}>
+                    <CrownIcon /> 尊享会员
+                  </span>
+                )}
+                <span className="hidden md:flex" style={{ color: tokens.textMuted }}>
+                  <ChevronDownIcon />
+                </span>
+              </button>
+              {dropdownOpen && <UserDropdown onClose={() => setDropdownOpen(false)} />}
+            </div>
+          ) : (
             <button
-              onClick={() => setDropdownOpen((o) => !o)}
+              onClick={() => openModal('login')}
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(201,145,42,0.15)',
+                border: '1px solid rgba(201,145,42,0.4)',
+                borderRadius: 4, cursor: 'pointer',
+                color: tokens.accentGold,
+                fontFamily: tokens.fontBody, fontSize: 12,
+                letterSpacing: '0.1em', padding: '7px 16px',
               }}
             >
-              {/* Avatar circle */}
-              <div style={{
-                width: 30, height: 30, borderRadius: '50%',
-                background: user.isVip
-                  ? 'linear-gradient(135deg, rgba(201,145,42,0.3), rgba(201,145,42,0.15))'
-                  : 'rgba(240,237,232,0.1)',
-                border: `1px solid ${user.isVip ? 'rgba(201,145,42,0.5)' : 'rgba(240,237,232,0.2)'}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: user.isVip ? tokens.accentGold : tokens.textMuted, flexShrink: 0,
-              }}>
-                <UserIcon />
-              </div>
-              <span style={{ fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted, letterSpacing: '0.06em' }}>
-                {user.phone}
-              </span>
-              {user.isVip && (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                  background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
-                  color: '#1a0f00', fontSize: 9, fontWeight: 600,
-                  padding: '2px 6px', borderRadius: 2,
-                  fontFamily: tokens.fontBody, letterSpacing: '0.08em',
-                }}>
-                  <CrownIcon /> 尊享会员
-                </span>
-              )}
-              <span style={{ color: tokens.textMuted, display: 'flex' }}>
-                <ChevronDownIcon />
-              </span>
+              登录 / 注册
             </button>
+          )}
 
-            {/* Dropdown */}
-            {dropdownOpen && (
-              <UserDropdown onClose={() => setDropdownOpen(false)} />
-            )}
-          </div>
-        ) : (
+          {/* Hamburger — mobile only */}
           <button
-            onClick={() => openModal('login')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(201,145,42,0.15)',
-              border: `1px solid rgba(201,145,42,0.4)`,
-              borderRadius: 4, cursor: 'pointer',
-              color: tokens.accentGold,
-              fontFamily: tokens.fontBody, fontSize: 12,
-              letterSpacing: '0.1em', padding: '7px 16px',
-              transition: 'all 0.2s ease',
-            }}
+            onClick={() => setMenuOpen((o) => !o)}
+            className="md:hidden flex items-center justify-center p-1"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.textMuted }}
           >
-            登录 / 注册
+            {menuOpen ? <CloseMenuIcon /> : <HamburgerIcon />}
           </button>
-        )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-[199] md:hidden"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="absolute top-[57px] left-0 right-0 py-2"
+            style={{
+              background: 'rgba(20,15,10,0.98)',
+              backdropFilter: 'blur(16px)',
+              borderBottom: '1px solid rgba(240,237,232,0.08)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {navLinks.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => handleNavClick(link)}
+                className="w-full text-left px-6 py-3 block"
+                style={{
+                  fontFamily: tokens.fontBody,
+                  fontSize: 15, fontWeight: 300,
+                  letterSpacing: '0.12em',
+                  color: (link.label === '短剧' ? page === 'episode-detail' : link.page === page)
+                    ? tokens.textPrimary : tokens.textMuted,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                }}
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
 const iconBtnStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 6,
   background: 'none', border: 'none',
-  color: tokens.textMuted, cursor: 'pointer',
-  padding: 0, transition: 'color 0.3s ease',
+  color: 'rgba(240,237,232,0.58)', cursor: 'pointer', padding: 0,
 };
 
 export default Navbar;
