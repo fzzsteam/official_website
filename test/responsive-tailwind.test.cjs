@@ -53,3 +53,11 @@ test('EpisodeSelector accepts sidebar and inline variants', () => {
   assert.match(src, /variant.*sidebar.*inline|inline.*sidebar/, 'should define both variants');
   assert.match(src, /grid-cols-8/, 'inline variant should use 8-column grid');
 });
+
+test('HomePage has responsive hero with touch swipe support', () => {
+  const src = read('src/components/HomePage.tsx');
+  assert.match(src, /onTouchStart/, 'hero should support touch start');
+  assert.match(src, /onTouchEnd/, 'hero should support touch end');
+  assert.match(src, /hidden lg:flex/, 'arrows should be hidden on mobile');
+  assert.match(src, /line-clamp-2/, 'description should clamp on mobile');
+});

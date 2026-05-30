@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { tokens } from './episode-detail/tokens';
 import { apiGet } from '../lib/api/client';
@@ -56,6 +56,19 @@ const HomePage: React.FC = () => {
   const heroDramas = dramas.filter((d) => d.releaseStatus === 'released');
   const hero = heroDramas[heroIndex] ?? null;
 
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 50) delta < 0 ? next() : prev();
+    touchStartX.current = null;
+  };
+
   const goTo = useCallback((idx: number) => {
     if (isTransitioning || heroDramas.length === 0) return;
     setIsTransitioning(true);
@@ -97,7 +110,11 @@ const HomePage: React.FC = () => {
 
       {/* ── Hero ─────────────────────────────────────────── */}
       {hero && (
-        <section style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+        <section
+        className="relative h-screen overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
 
           {/* Background: 横版封面图 */}
           <div style={{
@@ -127,15 +144,16 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div style={{
-            position: 'absolute', left: 72, bottom: 120,
-            opacity: isTransitioning ? 0 : 1,
-            transform: isTransitioning ? 'translateY(12px)' : 'translateY(0)',
-            transition: 'opacity 0.4s ease, transform 0.4s ease',
-            maxWidth: 560,
-          }}>
+          <div
+            className="absolute left-4 right-4 bottom-14 lg:left-[72px] lg:right-auto lg:bottom-[120px] lg:max-w-[560px]"
+            style={{
+              opacity: isTransitioning ? 0 : 1,
+              transform: isTransitioning ? 'translateY(12px)' : 'translateY(0)',
+              transition: 'opacity 0.4s ease, transform 0.4s ease',
+            }}
+          >
             {hero.subtitle && (
-              <div style={{
+              <div className="hidden lg:block" style={{
                 fontFamily: tokens.fontBody, fontSize: 13,
                 color: 'rgba(240,237,232,0.55)', letterSpacing: '0.28em',
                 marginBottom: 12, fontWeight: 300,
@@ -146,7 +164,7 @@ const HomePage: React.FC = () => {
 
             <h1 style={{
               fontFamily: tokens.fontDisplay, fontWeight: 400,
-              fontSize: 'clamp(60px, 7vw, 96px)',
+              fontSize: 'clamp(36px, 9vw, 96px)',
               color: tokens.textPrimary, letterSpacing: '0.04em',
               lineHeight: 1.05, margin: '0 0 18px',
               textShadow: '0 4px 32px rgba(0,0,0,0.5)',
@@ -171,21 +189,24 @@ const HomePage: React.FC = () => {
             )}
 
             {hero.synopsis && (
-              <p style={{
-                fontFamily: tokens.fontBody, fontSize: 13, lineHeight: 1.9,
-                color: 'rgba(240,237,232,0.55)', fontWeight: 300,
-                letterSpacing: '0.04em', marginBottom: 32,
-                maxWidth: 420,
-              }}>
+              <p
+                className="line-clamp-2 lg:line-clamp-none mb-6 lg:mb-8"
+                style={{
+                  fontFamily: tokens.fontBody, fontSize: 13, lineHeight: 1.9,
+                  color: 'rgba(240,237,232,0.55)', fontWeight: 300,
+                  letterSpacing: '0.04em', maxWidth: 420,
+                }}
+              >
                 {hero.synopsis.length > 80 ? hero.synopsis.slice(0, 80) + '…' : hero.synopsis}
               </p>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-[14px]">
               <button
                 onClick={() => handlePlayDrama(hero)}
+                className="w-full lg:w-auto"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
                   border: 'none', borderRadius: 24,
                   color: '#1a0f00', cursor: 'pointer',
@@ -219,8 +240,8 @@ const HomePage: React.FC = () => {
           {/* Arrow controls */}
           {heroDramas.length > 1 && (
             <>
-              <button onClick={prev} style={{ ...arrowBtnStyle, left: 20 }}><ChevronLeftIcon /></button>
-              <button onClick={next} style={{ ...arrowBtnStyle, right: 20 }}><ChevronRightIcon /></button>
+              <button onClick={prev} className="hidden lg:flex" style={{ ...arrowBtnStyle, left: 20 }}><ChevronLeftIcon /></button>
+              <button onClick={next} className="hidden lg:flex" style={{ ...arrowBtnStyle, right: 20 }}><ChevronRightIcon /></button>
             </>
           )}
 
@@ -249,7 +270,7 @@ const HomePage: React.FC = () => {
       )}
 
       {/* ── Hot Recommendations ──────────────────────────── */}
-      <section style={{ padding: '48px 60px 80px' }}>
+      <section className="px-4 pt-8 pb-12 lg:px-[60px] lg:pt-12 lg:pb-20">
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 24,
