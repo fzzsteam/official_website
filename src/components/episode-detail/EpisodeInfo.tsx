@@ -56,11 +56,11 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
   };
 
   return (
-    <div style={{ padding: '20px 0', flex: 1 }}>
-      {/* Title row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+    <div className="py-5 flex-1">
+      {/* Title + meta */}
+      <div className="flex items-start justify-between mb-2.5">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div className="flex items-center gap-2.5 mb-1.5">
             <h1 style={{
               fontFamily: tokens.fontDisplay,
               fontSize: 22, fontWeight: 400,
@@ -82,10 +82,7 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
               </span>
             )}
           </div>
-
-          {/* Meta info */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
+          <div className="flex items-center gap-1.5" style={{
             fontFamily: tokens.fontBody, fontSize: 12,
             color: tokens.textMuted, letterSpacing: '0.05em',
           }}>
@@ -95,22 +92,26 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
             <span style={{ color: 'rgba(240,237,232,0.2)' }}>|</span>
             <span>{drama.year}</span>
             <span style={{ color: 'rgba(240,237,232,0.2)' }}>|</span>
-            {drama.genres.map((g) => (
-              <span key={g}>{g}</span>
-            ))}
+            {drama.genres.map((g) => <span key={g}>{g}</span>)}
           </div>
         </div>
-
-        {/* Collect / Like / Share */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        {/* Action buttons vertical — desktop only */}
+        <div className="hidden md:flex flex-col items-center gap-3.5">
           <ActionBtn icon={<StarIcon filled={collected} />} label="已收藏" onClick={handleCollect} active={collected} />
           <ActionBtn icon={<ThumbUpIcon />} label="点赞" onClick={onLike} />
           <ActionBtn icon={<ShareIcon />} label="分享" onClick={onShare} />
         </div>
       </div>
 
+      {/* Action buttons horizontal — mobile only */}
+      <div className="flex md:hidden items-center gap-5 mb-3">
+        <ActionBtn icon={<StarIcon filled={collected} />} label="已收藏" onClick={handleCollect} active={collected} />
+        <ActionBtn icon={<ThumbUpIcon />} label="点赞" onClick={onLike} />
+        <ActionBtn icon={<ShareIcon />} label="分享" onClick={onShare} />
+      </div>
+
       {/* Description */}
-      <div style={{ paddingRight: 60 }}>
+      <div className="pr-0 md:pr-[60px]">
         <p style={{
           fontFamily: tokens.fontBody, fontSize: 13, lineHeight: 2,
           color: 'rgba(240,237,232,0.65)', fontWeight: 300,
@@ -122,16 +123,14 @@ const EpisodeInfo: React.FC<EpisodeInfoProps> = ({
         }}>
           简介：{drama.description}
         </p>
-
         <button
           onClick={() => setExpanded((e) => !e)}
+          className="inline-flex items-center gap-1 mt-2"
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
             background: 'none', border: 'none',
             color: tokens.textMuted, cursor: 'pointer',
             fontFamily: tokens.fontBody, fontSize: 12,
-            letterSpacing: '0.08em', marginTop: 8, padding: 0,
-            transition: 'color 0.3s ease',
+            letterSpacing: '0.08em', padding: 0,
           }}
         >
           {expanded ? '收起' : '展开'}

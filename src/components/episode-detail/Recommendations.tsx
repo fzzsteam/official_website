@@ -28,11 +28,8 @@ const Recommendations: React.FC<RecommendationsProps> = ({ items, onSelect }) =>
   };
 
   return (
-    <section style={{ padding: '32px 0 40px' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 18, paddingLeft: 20,
-      }}>
+    <section className="pt-6 pb-8 md:pt-8 md:pb-10">
+      <div className="flex items-center justify-between mb-[18px] pl-4 md:pl-5">
         <h2 style={{
           fontFamily: tokens.fontCormorant,
           fontSize: 13, fontWeight: 500,
@@ -42,8 +39,8 @@ const Recommendations: React.FC<RecommendationsProps> = ({ items, onSelect }) =>
           猜你喜欢
         </h2>
 
-        {/* Arrow controls */}
-        <div style={{ display: 'flex', gap: 6, paddingRight: 20 }}>
+        {/* Arrow controls — desktop only */}
+        <div className="hidden md:flex gap-1.5 pr-5">
           {[{ dir: 'left' as const, Icon: ChevronLeftIcon }, { dir: 'right' as const, Icon: ChevronRightIcon }].map(({ dir, Icon }) => (
             <button
               key={dir}
@@ -66,10 +63,8 @@ const Recommendations: React.FC<RecommendationsProps> = ({ items, onSelect }) =>
       {/* Scrollable row */}
       <div
         ref={scrollRef}
-        style={{
-          display: 'flex', gap: 12, overflowX: 'auto',
-          scrollbarWidth: 'none', paddingLeft: 20, paddingRight: 20,
-        }}
+        className="flex gap-3 overflow-x-auto px-4 md:px-5"
+        style={{ scrollbarWidth: 'none' }}
       >
         {items.map((item) => (
           <div

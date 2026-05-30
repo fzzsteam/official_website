@@ -17,7 +17,7 @@ const CastSection: React.FC<CastSectionProps> = ({ cast, onViewAll }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div style={{ minWidth: 0, flex: '0 0 auto', width: 300 }}>
+    <div className="w-full min-w-0">
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{
