@@ -9,13 +9,16 @@ interface InnerPageProps {
 
 export const InnerPage: React.FC<InnerPageProps> = ({ label, title, children }) => (
   <div style={pageBackgroundStyle}>
-    <main style={innerPageStyle}>
+    <main className="min-h-[calc(100vh-105px)] pt-[130px] pb-[100px] px-4 md:px-[60px] max-w-[860px] mx-auto">
       <span style={pageLabelStyle}>{label}</span>
       <h1 style={pageHeadingStyle}>{title}</h1>
       {children}
     </main>
 
-    <footer style={footerStyle}>
+    <footer
+      className="py-10 px-4 md:px-[60px] flex flex-col md:flex-row items-start md:items-center justify-between gap-3 max-w-[860px] mx-auto"
+      style={{ borderTop: '1px solid rgba(240,236,228,0.07)' }}
+    >
       <span style={footerTextStyle}>© 2026 深圳市方直智胜科技有限公司</span>
       <span style={footerTextStyle}>粤ICP备2026044251号</span>
     </footer>
@@ -34,7 +37,7 @@ export const SectionBody: React.FC<{ children: React.ReactNode }> = ({ children 
 );
 
 export const InfoRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={infoRowStyle}>
+  <div className="flex gap-5 mb-3.5 text-sm leading-[1.9] items-baseline" style={{ color: 'rgba(240,236,228,0.72)' }}>
     <span style={infoLabelStyle}>{label}</span>
     <span>{children}</span>
   </div>
@@ -49,13 +52,6 @@ const pageBackgroundStyle: React.CSSProperties = {
   `,
   color: tokens.textPrimary,
   paddingTop: 1,
-};
-
-const innerPageStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 105px)',
-  padding: '130px 60px 100px',
-  maxWidth: 860,
-  margin: '0 auto',
 };
 
 const pageLabelStyle: React.CSSProperties = {
@@ -104,16 +100,6 @@ const sectionBodyStyle: React.CSSProperties = {
   margin: 0,
 };
 
-const infoRowStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: 20,
-  marginBottom: 14,
-  fontSize: 14,
-  color: 'rgba(240,236,228,0.72)',
-  lineHeight: 1.9,
-  alignItems: 'baseline',
-};
-
 const infoLabelStyle: React.CSSProperties = {
   minWidth: 88,
   color: tokens.textMuted,
@@ -121,17 +107,6 @@ const infoLabelStyle: React.CSSProperties = {
   letterSpacing: '0.12em',
   fontSize: 12,
   flexShrink: 0,
-};
-
-const footerStyle: React.CSSProperties = {
-  padding: '40px 60px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderTop: '1px solid rgba(240,236,228,0.07)',
-  maxWidth: 860,
-  margin: '0 auto',
-  gap: 20,
 };
 
 const footerTextStyle: React.CSSProperties = {
