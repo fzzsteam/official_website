@@ -47,3 +47,9 @@ test('EpisodeDetailPage has responsive flex layout', () => {
   assert.match(src, /hidden lg:flex/, 'sidebar selector should be hidden on mobile');
   assert.match(src, /lg:hidden/, 'inline selector should be hidden on desktop');
 });
+
+test('EpisodeSelector accepts sidebar and inline variants', () => {
+  const src = read('src/components/episode-detail/EpisodeSelector.tsx');
+  assert.match(src, /variant.*sidebar.*inline|inline.*sidebar/, 'should define both variants');
+  assert.match(src, /grid-cols-8/, 'inline variant should use 8-column grid');
+});

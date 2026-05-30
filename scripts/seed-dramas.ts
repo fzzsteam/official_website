@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
+const prisma = new PrismaClient();
 
 // ── ID helpers ────────────────────────────────────────────────────
 const did  = (n: number) => `00000000-0000-0000-0001-${String(n).padStart(12, '0')}`;

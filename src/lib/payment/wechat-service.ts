@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { getEnv } from '@/lib/config/env';
 import { prisma } from '@/lib/db/prisma';
 import { calculateNextVipExpiry } from '@/lib/membership/membership-service';
@@ -59,8 +60,9 @@ function createOrderNo() {
   return `WX${timestamp}${suffix}`;
 }
 
-function normalizeRawPayload(rawPayload: Record<string, unknown> | string) {
-  return typeof rawPayload === 'string' ? { raw: rawPayload } : rawPayload;
+function normalizeRawPayload(rawPayload: Record<string, unknown> | string): Prisma.InputJsonValue {
+  const obj = typeof rawPayload === 'string' ? { raw: rawPayload } : rawPayload;
+  return obj as Prisma.InputJsonValue;
 }
 
 async function requestWechatNativeCodeUrl(
