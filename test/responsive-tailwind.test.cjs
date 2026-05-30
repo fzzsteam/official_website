@@ -39,3 +39,11 @@ test('VideoPlayer uses 9:16 aspect ratio', () => {
   assert.doesNotMatch(src, /aspectRatio.*16.*9|16\/9/, 'should not use 16:9 ratio');
   assert.match(src, /aspect-\[9\/16\]/, 'should use 9:16 Tailwind class');
 });
+
+test('EpisodeDetailPage has responsive flex layout', () => {
+  const src = read('src/components/episode-detail/index.tsx');
+  assert.match(src, /flex-col lg:flex-row/, 'should stack on mobile, side-by-side on desktop');
+  assert.match(src, /lg:max-w-\[400px\]/, 'video should be max 400px on desktop');
+  assert.match(src, /hidden lg:flex/, 'sidebar selector should be hidden on mobile');
+  assert.match(src, /lg:hidden/, 'inline selector should be hidden on desktop');
+});

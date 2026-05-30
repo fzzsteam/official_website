@@ -38,7 +38,6 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-
     const loadPlayUrl = async () => {
       setPlayLoading(true);
       setPlayError('');
@@ -46,50 +45,36 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
         const data = await apiGet<{ url: string }>(
           `/api/dramas/${encodeURIComponent(drama.id)}/episodes/${currentEpisode}/play-url`,
         );
-        if (!cancelled) {
-          setCurrentVideoSrc(data.url);
-        }
+        if (!cancelled) setCurrentVideoSrc(data.url);
       } catch (requestError) {
-        if (cancelled) {
-          return;
-        }
-
+        if (cancelled) return;
         setCurrentVideoSrc(undefined);
         setPlayError(requestError instanceof Error ? requestError.message : '播放地址获取失败');
         const apiError = requestError as ApiError;
-        if (apiError.code === 'AUTH_REQUIRED') {
-          openModal('login');
-        } else if (apiError.code === 'VIP_REQUIRED') {
-          openModal('vip');
-        }
+        if (apiError.code === 'AUTH_REQUIRED') openModal('login');
+        else if (apiError.code === 'VIP_REQUIRED') openModal('vip');
       } finally {
-        if (!cancelled) {
-          setPlayLoading(false);
-        }
+        if (!cancelled) setPlayLoading(false);
       }
     };
-
     void loadPlayUrl();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [currentEpisode, drama.id, openModal]);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: `
-        linear-gradient(180deg, rgba(46, 35, 28, 0.18), rgba(24, 18, 15, 0.28)),
-        linear-gradient(135deg, #3b3028 0%, #4a3a2f 20%, #5b4738 46%, #3e3127 72%, #241d19 100%)
-      `,
-      color: tokens.textPrimary,
-      fontFamily: tokens.fontBody,
-      position: 'relative',
-    }}>
+    <div
+      className="min-h-screen relative"
+      style={{
+        background: `
+          linear-gradient(180deg, rgba(46, 35, 28, 0.18), rgba(24, 18, 15, 0.28)),
+          linear-gradient(135deg, #3b3028 0%, #4a3a2f 20%, #5b4738 46%, #3e3127 72%, #241d19 100%)
+        `,
+        color: tokens.textPrimary,
+        fontFamily: tokens.fontBody,
+      }}
+    >
       {/* Texture overlay */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+      <div className="fixed inset-0 pointer-events-none z-0" style={{
         background: `
           radial-gradient(circle at top center, rgba(255,247,231,0.07) 0%, rgba(255,247,231,0.02) 24%, transparent 52%),
           repeating-linear-gradient(90deg, rgba(255,250,239,0.016) 0, rgba(255,250,239,0.016) 1px, transparent 1px, transparent 5px),
@@ -99,54 +84,62 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
 
       <Navbar />
 
-      {/* Main layout: content + sidebar */}
-      <div style={{
-        display: 'flex',
-        paddingTop: 62, // navbar height
-        position: 'relative', zIndex: 1,
-        minHeight: '100vh',
-      }}>
-        {/* Left: video + info + cast + recommendations */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      {/* Main layout: flex-col on mobile, flex-row on desktop */}
+      <div className="flex flex-col lg:flex-row pt-[62px] relative z-[1] min-h-screen">
 
-          {/* Video player */}
-          <VideoPlayer
-            src={currentVideoSrc}
-            poster={videoPoster}
-            isVip={drama.isVip}
-            onBack={handleBack}
-            backLabel="返回详情页"
-            isLoading={playLoading}
-            errorMessage={playError}
-          />
+        {/* Left column */}
+        <div className="flex-1 min-w-0 flex flex-col">
 
-          {/* Info row: episode info + cast */}
-          <div style={{
-            display: 'flex', alignItems: 'flex-start',
-            padding: '20px 20px 0',
-            gap: 32,
-            borderBottom: '1px solid rgba(240,237,232,0.07)',
-          }}>
-            <EpisodeInfo
-              drama={drama}
-              currentEpisode={currentEpisode}
+          {/* Video — full-width on mobile, max 400px centered on desktop */}
+          <div className="w-full lg:max-w-[400px] lg:mx-auto">
+            <VideoPlayer
+              src={currentVideoSrc}
+              poster={videoPoster}
+              isVip={drama.isVip}
+              onBack={handleBack}
+              backLabel="返回详情页"
+              isLoading={playLoading}
+              errorMessage={playError}
             />
+          </div>
+
+          {/* Info row */}
+          <div
+            className="flex items-start px-4 md:px-5 pt-5"
+            style={{
+              gap: 32,
+              borderBottom: '1px solid rgba(240,237,232,0.07)',
+            }}
+          >
+            <EpisodeInfo drama={drama} currentEpisode={currentEpisode} />
             <CastSection cast={cast} />
           </div>
 
-          {/* Recommendations */}
+          {/* EpisodeSelector inline — mobile only */}
+          <div className="lg:hidden">
+            <EpisodeSelector
+              drama={drama}
+              currentEpisode={currentEpisode}
+              onSelectEpisode={setCurrentEpisode}
+              variant="inline"
+            />
+          </div>
+
           <Recommendations
             items={recommendations}
             onSelect={(id) => console.log('Navigate to drama:', id)}
           />
         </div>
 
-        {/* Right sidebar: episode selector */}
-        <EpisodeSelector
-          drama={drama}
-          currentEpisode={currentEpisode}
-          onSelectEpisode={setCurrentEpisode}
-        />
+        {/* Right sidebar — desktop only */}
+        <div className="hidden lg:flex">
+          <EpisodeSelector
+            drama={drama}
+            currentEpisode={currentEpisode}
+            onSelectEpisode={setCurrentEpisode}
+            variant="sidebar"
+          />
+        </div>
       </div>
     </div>
   );
