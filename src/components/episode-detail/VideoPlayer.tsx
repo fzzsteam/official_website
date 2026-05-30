@@ -167,26 +167,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      style={{ position: 'relative', width: '100%', background: '#000', aspectRatio: '16/9' }}
+      className="relative w-full bg-black aspect-[9/16]"
       onMouseMove={resetHideTimer}
       onMouseLeave={() => setShowControls(false)}
     >
       {/* Back button */}
       <button
         onClick={onBack}
+        className="absolute top-4 left-4 z-20 flex items-center gap-1.5"
         style={{
-          position: 'absolute', top: 16, left: 16, zIndex: 20,
-          display: 'flex', alignItems: 'center', gap: 6,
           background: 'rgba(0,0,0,0.4)', border: 'none',
           color: tokens.textMuted, cursor: 'pointer',
           fontFamily: tokens.fontBody, fontSize: 12,
           letterSpacing: '0.1em', padding: '7px 14px',
           borderRadius: 2, backdropFilter: 'blur(4px)',
-          transition: 'color 0.3s ease',
         }}
       >
         <BackArrowIcon />
-        {backLabel}
+        <span className="hidden md:inline">{backLabel}</span>
       </button>
 
       {/* VIP badge */}
@@ -308,48 +306,47 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }} />
         </div>
 
-        {/* Controls row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Left controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button onClick={togglePlay} style={ctrlBtnStyle}>
-              {isPlaying ? <PauseIcon /> : <PlayIcon />}
-            </button>
-            <button onClick={() => seek(-10)} style={ctrlBtnStyle} title="后退10秒">
-              <Rewind10Icon />
-            </button>
-            <button onClick={() => seek(10)} style={ctrlBtnStyle} title="前进10秒">
-              <Forward10Icon />
-            </button>
-            <button style={ctrlBtnStyle} title="音量">
-              <VolumeIcon />
-            </button>
-            <span style={{
-              fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted,
-              letterSpacing: '0.04em', userSelect: 'none',
-            }}>
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          </div>
-
-          {/* Right controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {['倍速', '高清'].map((label) => (
-              <button key={label} style={{
-                background: 'none', border: `1px solid rgba(240,237,232,0.28)`,
-                color: tokens.textMuted, cursor: 'pointer',
-                fontFamily: tokens.fontBody, fontSize: 11,
-                padding: '3px 9px', borderRadius: 2,
-                letterSpacing: '0.08em',
-                transition: 'border-color 0.2s ease, color 0.2s ease',
-              }}>
-                {label}
+          {/* Controls row */}
+          <div className="flex items-center justify-between">
+            {/* Left controls */}
+            <div className="flex items-center gap-2 md:gap-[14px]">
+              <button onClick={togglePlay} className="p-3 md:p-1" style={ctrlBtnStyle}>
+                {isPlaying ? <PauseIcon /> : <PlayIcon />}
               </button>
-            ))}
-            <button style={ctrlBtnStyle} title="设置"><SettingsIcon /></button>
-            <button style={ctrlBtnStyle} title="全屏"><FullscreenIcon /></button>
+              <button onClick={() => seek(-10)} className="p-3 md:p-1" style={ctrlBtnStyle} title="后退10秒">
+                <Rewind10Icon />
+              </button>
+              <button onClick={() => seek(10)} className="p-3 md:p-1" style={ctrlBtnStyle} title="前进10秒">
+                <Forward10Icon />
+              </button>
+              <button className="hidden md:flex p-1" style={ctrlBtnStyle} title="音量">
+                <VolumeIcon />
+              </button>
+              <span style={{
+                fontFamily: tokens.fontBody, fontSize: 12, color: tokens.textMuted,
+                letterSpacing: '0.04em', userSelect: 'none',
+              }}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            </div>
+
+            {/* Right controls */}
+            <div className="flex items-center gap-2 md:gap-[8px]">
+              {['倍速', '高清'].map((label) => (
+                <button key={label} className="hidden md:block" style={{
+                  background: 'none', border: '1px solid rgba(240,237,232,0.28)',
+                  color: tokens.textMuted, cursor: 'pointer',
+                  fontFamily: tokens.fontBody, fontSize: 11,
+                  padding: '3px 9px', borderRadius: 2,
+                  letterSpacing: '0.08em',
+                }}>
+                  {label}
+                </button>
+              ))}
+              <button className="hidden md:flex p-1" style={ctrlBtnStyle} title="设置"><SettingsIcon /></button>
+              <button className="p-3 md:p-1" style={ctrlBtnStyle} title="全屏"><FullscreenIcon /></button>
+            </div>
           </div>
-        </div>
       </div>
     </div>
   );

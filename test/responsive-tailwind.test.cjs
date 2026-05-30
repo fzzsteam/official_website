@@ -33,3 +33,9 @@ test('Navbar uses Tailwind responsive classes for mobile/desktop', () => {
   assert.match(src, /hidden md:flex/, 'nav links should be hidden on mobile with md:flex');
   assert.match(src, /md:hidden/, 'hamburger should be hidden on desktop');
 });
+
+test('VideoPlayer uses 9:16 aspect ratio', () => {
+  const src = read('src/components/episode-detail/VideoPlayer.tsx');
+  assert.doesNotMatch(src, /aspectRatio.*16.*9|16\/9/, 'should not use 16:9 ratio');
+  assert.match(src, /aspect-\[9\/16\]/, 'should use 9:16 Tailwind class');
+});
