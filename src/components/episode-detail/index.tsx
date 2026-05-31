@@ -72,10 +72,10 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
       } catch (requestError) {
         if (cancelled) return;
         setCurrentVideoSrc(undefined);
-        setPlayError(requestError instanceof Error ? requestError.message : '播放地址获取失败');
         const apiError = requestError as ApiError;
-        if (apiError.code === 'AUTH_REQUIRED') openModal('login');
-        else if (apiError.code === 'VIP_REQUIRED') openModal('vip');
+        if (apiError.code !== 'AUTH_REQUIRED' && apiError.code !== 'VIP_REQUIRED') {
+          setPlayError(requestError instanceof Error ? requestError.message : '播放地址获取失败');
+        }
       } finally {
         if (!cancelled) setPlayLoading(false);
       }
