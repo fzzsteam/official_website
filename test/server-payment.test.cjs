@@ -31,9 +31,29 @@ test('wechat payment env schema supports public key mode', () => {
   const source = read('src/lib/config/env.ts');
 
   assert.match(source, /WECHAT_PAY_PUBLIC_KEY_ID/);
-  assert.match(source, /WECHAT_PAY_PUBLIC_KEY/);
-  assert.match(source, /WECHAT_PAY_PRIVATE_KEY/);
+  assert.match(source, /WECHAT_PAY_PUBLIC_KEY_BASE64/);
+  assert.match(source, /WECHAT_PAY_PRIVATE_KEY_BASE64/);
   assert.match(source, /WECHAT_PAY_CERT_SERIAL_NO/);
+  assert.doesNotMatch(source, /WECHAT_PAY_PRIVATE_KEY:\s*z/);
+  assert.doesNotMatch(source, /WECHAT_PAY_PUBLIC_KEY:\s*z/);
+});
+
+test('wechat payment service decodes base64 encoded pem env values', () => {
+  const source = read('src/lib/payment/wechat-service.ts');
+
+  assert.match(source, /WECHAT_PAY_PRIVATE_KEY_BASE64/);
+  assert.match(source, /WECHAT_PAY_PUBLIC_KEY_BASE64/);
+  assert.match(source, /Buffer\.from\([^)]*base64[^)]*\)/s);
+  assert.match(source, /toString\('utf8'\)/);
+});
+
+test('wechat payment service preserves upstream failure status and safe response text', () => {
+  const source = read('src/lib/payment/wechat-service.ts');
+
+  assert.match(source, /WechatPayRequestError/);
+  assert.match(source, /response\.status/);
+  assert.match(source, /responseText/);
+  assert.match(source, /WECHAT_NATIVE_ORDER_REQUEST_FAILED/);
 });
 
 test('wechat payment routes use unified ok\/fail response helpers', () => {

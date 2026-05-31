@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { createDecipheriv, createSign, createVerify, randomUUID } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
 import { Prisma } from '@prisma/client';
 import { getEnv } from '@/lib/config/env';
 import { prisma } from '@/lib/db/prisma';
@@ -37,6 +36,15 @@ interface WechatNotificationRequest {
   nonce: string;
   signature: string;
   serial: string;
+}
+
+class WechatPayRequestError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly responseText: string,
+  ) {
+    super('WECHAT_NATIVE_ORDER_REQUEST_FAILED');
+  }
 }
 
 export interface WechatNativeOrder {
@@ -95,18 +103,8 @@ function getString(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
-function loadPem(value: string) {
-  const normalized = value.replace(/\\n/g, '\n');
-
-  if (normalized.includes('-----BEGIN')) {
-    return normalized;
-  }
-
-  if (existsSync(value)) {
-    return readFileSync(value, 'utf8');
-  }
-
-  return normalized;
+function loadBase64Pem(value: string) {
+  return Buffer.from(value, 'base64').toString('utf8');
 }
 
 function buildWechatPayMessage(method: string, pathWithQuery: string, timestamp: string, nonce: string, body: string) {
@@ -121,7 +119,7 @@ function signWechatPayRequest(method: string, url: URL, body: string) {
   const message = buildWechatPayMessage(method, pathWithQuery, timestamp, nonce, body);
   const signature = createSign('RSA-SHA256')
     .update(message, 'utf8')
-    .sign(loadPem(env.WECHAT_PAY_PRIVATE_KEY), 'base64');
+    .sign(loadBase64Pem(env.WECHAT_PAY_PRIVATE_KEY_BASE64), 'base64');
 
   return {
     authorization:
@@ -141,7 +139,7 @@ export function verifyWechatpaySignature(request: WechatNotificationRequest) {
   const message = `${request.timestamp}\n${request.nonce}\n${request.rawBody}\n`;
   const verified = createVerify('RSA-SHA256')
     .update(message, 'utf8')
-    .verify(loadPem(env.WECHAT_PAY_PUBLIC_KEY), request.signature, 'base64');
+    .verify(loadBase64Pem(env.WECHAT_PAY_PUBLIC_KEY_BASE64), request.signature, 'base64');
 
   if (!verified) {
     throw new Error('WECHAT_PAY_NOTIFY_SIGNATURE_INVALID');
@@ -205,7 +203,7 @@ async function requestWechatNativeCodeUrl(
   const responseText = await response.text();
 
   if (!response.ok) {
-    throw new Error('WECHAT_NATIVE_ORDER_REQUEST_FAILED');
+    throw new WechatPayRequestError(response.status, responseText);
   }
 
   verifyWechatpaySignature({

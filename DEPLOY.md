@@ -41,9 +41,17 @@
 | `WECHAT_PAY_APPID` | 微信 AppID |
 | `WECHAT_PAY_MCH_ID` | 商户号 |
 | `WECHAT_PAY_API_V3_KEY` | APIv3 密钥 |
-| `WECHAT_PAY_PRIVATE_KEY` | 商户私钥（`.pem` 内容，换行用 `\n` 替代） |
+| `WECHAT_PAY_PRIVATE_KEY_BASE64` | 商户私钥 `apiclient_key.pem` 的 Base64 单行内容 |
 | `WECHAT_PAY_CERT_SERIAL_NO` | 商户证书序列号 |
+| `WECHAT_PAY_PUBLIC_KEY_ID` | 微信支付平台公钥 ID |
+| `WECHAT_PAY_PUBLIC_KEY_BASE64` | 微信支付平台公钥 `pub_key.pem` 的 Base64 单行内容 |
 | `WECHAT_PAY_NOTIFY_URL` | 支付回调地址，如 `https://yourdomain.com/api/pay/notify` |
+
+> **生成 PEM Base64 环境变量：**
+> ```bash
+> base64 -i cert/1746195412_20260530_cert/apiclient_key.pem | tr -d '\n'
+> base64 -i cert/pub_key.pem | tr -d '\n'
+> ```
 
 ### 站点
 
