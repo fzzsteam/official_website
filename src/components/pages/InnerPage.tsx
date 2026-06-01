@@ -1,5 +1,6 @@
 import React from 'react';
 import { tokens } from '../episode-detail/tokens';
+import Footer from '../Footer';
 
 interface InnerPageProps {
   label: string;
@@ -15,13 +16,7 @@ export const InnerPage: React.FC<InnerPageProps> = ({ label, title, children }) 
       {children}
     </main>
 
-    <footer
-      className="py-10 px-4 md:px-[60px] flex flex-col md:flex-row items-start md:items-center justify-between gap-3 max-w-[860px] mx-auto"
-      style={{ borderTop: '1px solid rgba(240,236,228,0.07)' }}
-    >
-      <span style={footerTextStyle}>© 2026 深圳市方直智胜科技有限公司</span>
-      <span style={footerTextStyle}>粤ICP备2026044251号</span>
-    </footer>
+    <Footer className="max-w-[860px] mx-auto" />
   </div>
 );
 
@@ -107,12 +102,4 @@ const infoLabelStyle: React.CSSProperties = {
   letterSpacing: '0.12em',
   fontSize: 12,
   flexShrink: 0,
-};
-
-const footerTextStyle: React.CSSProperties = {
-  fontSize: 10,
-  letterSpacing: '0.12em',
-  color: tokens.textMuted,
-  fontWeight: 300,
-  fontFamily: tokens.fontBody,
 };

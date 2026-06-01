@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { tokens } from './episode-detail/tokens';
 import { apiGet } from '../lib/api/client';
 import type { ApiDrama, Drama } from '../types/drama';
+import Footer from './Footer';
 
 // ── Icons ────────────────────────────────────────────────────────
 const PlayIcon = () => (
@@ -289,6 +290,8 @@ const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };

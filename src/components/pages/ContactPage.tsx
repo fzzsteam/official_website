@@ -15,12 +15,7 @@ const ContactPage: React.FC = () => (
       <InfoRow label="工作时间">周一至周五 9:00-18:00，周末及法定节假日休息</InfoRow>
     </PageSection>
 
-    <PageSection title="备案信息">
-      <InfoRow label="网站名称">方直智胜AI漫剧工场</InfoRow>
-      <InfoRow label="ICP 备案">粤ICP备2026044251号</InfoRow>
-      <InfoRow label="主办单位">深圳市方直智胜科技有限公司</InfoRow>
-      <InfoRow label="审核时间">2026年05月</InfoRow>
-    </PageSection>
+
   </InnerPage>
 );
 

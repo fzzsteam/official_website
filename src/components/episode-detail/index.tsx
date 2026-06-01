@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { tokens } from './tokens';
+import Footer from '../Footer';
 import VideoPlayer from './VideoPlayer';
 import EpisodeInfo from './EpisodeInfo';
 import CastSection from './CastSection';
@@ -177,6 +178,8 @@ const EpisodeDetailPage: React.FC<EpisodeDetailPageProps> = ({
           />
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
