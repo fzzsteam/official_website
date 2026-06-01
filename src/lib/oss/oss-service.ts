@@ -16,6 +16,7 @@ function getOssClient() {
       bucket: env.OSS_BUCKET,
       accessKeyId: env.OSS_ACCESS_KEY_ID,
       accessKeySecret: env.OSS_ACCESS_KEY_SECRET,
+      secure: true,
     });
   }
 
