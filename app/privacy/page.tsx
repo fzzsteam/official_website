@@ -132,7 +132,7 @@ export default function PrivacyPage() {
         <H2>九、联系我们</H2>
         <P>如您对本隐私政策有任何疑问或投诉，请通过以下方式联系我们：</P>
         <P>公司名称：深圳市方直智胜科技有限公司</P>
-        <P>电子邮件：support@fzzs.com</P>
+        <P>电子邮件：lanyanfeng@fzzsedu.cn</P>
         <P>我们将在收到您的请求后15个工作日内予以回复。</P>
 
         <div style={{

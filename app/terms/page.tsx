@@ -130,7 +130,7 @@ export default function TermsPage() {
         <H2>九、联系我们</H2>
         <P>如您对本协议有任何疑问，请通过以下方式联系我们：</P>
         <P>公司名称：深圳市方直智胜科技有限公司</P>
-        <P>电子邮件：support@fzzs.com</P>
+        <P>电子邮件：lanyanfeng@fzzsedu.cn</P>
 
         <div style={{
           marginTop: 60, paddingTop: 24,
