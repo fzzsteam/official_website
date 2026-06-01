@@ -234,6 +234,7 @@ const inputWrapStyle: React.CSSProperties = {
   background: 'rgba(240,237,232,0.06)',
   border: '1px solid rgba(240,237,232,0.12)',
   borderRadius: 4, padding: '0 14px',
+  overflow: 'hidden',
 };
 
 const inputIconStyle: React.CSSProperties = {
@@ -241,7 +242,7 @@ const inputIconStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
-  flex: 1, background: 'none', border: 'none', outline: 'none',
+  flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none',
   color: tokens.textPrimary, fontFamily: tokens.fontBody, fontSize: 14,
   letterSpacing: '0.06em', padding: '14px 0',
 };
