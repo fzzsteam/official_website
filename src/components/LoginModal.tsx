@@ -206,9 +206,25 @@ const LoginModal: React.FC = () => {
           </div>
           <span style={{ fontFamily: tokens.fontBody, fontSize: 11, color: tokens.textMuted, letterSpacing: '0.04em' }}>
             我已阅读并同意
-            <span style={{ color: tokens.accentGold }}>《用户协议》</span>
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: tokens.accentGold, textDecoration: 'none' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              《用户协议》
+            </a>
             和
-            <span style={{ color: tokens.accentGold }}>《隐私政策》</span>
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: tokens.accentGold, textDecoration: 'none' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              《隐私政策》
+            </a>
           </span>
         </div>
       </div>
