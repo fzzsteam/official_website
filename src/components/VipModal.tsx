@@ -44,7 +44,8 @@ function getGridCols(count: number): string {
 }
 
 const VipModal: React.FC = () => {
-  const { closeModal, selectPlan } = useApp();
+  const { closeModal, selectPlan, user } = useApp();
+  const isRenewal = !!user?.isVip;
   const [plans, setPlans] = useState<VipPlan[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -126,13 +127,13 @@ const VipModal: React.FC = () => {
             fontFamily: tokens.fontDisplay, fontSize: 24, fontWeight: 400,
             color: tokens.textPrimary, letterSpacing: '0.12em', margin: '0 0 6px',
           }}>
-            开通会员
+            {isRenewal ? '续费会员' : '开通会员'}
           </h2>
           <p style={{
             fontFamily: tokens.fontBody, fontSize: 12,
             color: tokens.textMuted, letterSpacing: '0.08em', margin: 0,
           }}>
-            开通会员，畅享多重特权
+            {isRenewal ? '续费后有效期在当前基础上顺延' : '开通会员，畅享多重特权'}
           </p>
         </div>
 
@@ -291,7 +292,7 @@ const VipModal: React.FC = () => {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
-            立即开通
+            {isRenewal ? '立即续费' : '立即开通'}
           </button>
         )}
 

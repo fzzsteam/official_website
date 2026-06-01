@@ -58,7 +58,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
           <UserAvatarIcon />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: user.isVip ? 4 : 0 }}>
             <span style={{
               fontFamily: tokens.fontBody, fontSize: 14,
               color: tokens.textPrimary, fontWeight: 400,
@@ -72,23 +72,47 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
               fontFamily: tokens.fontBody, letterSpacing: '0.08em',
               ...(user.isVip
                 ? {
-                    background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
-                    color: '#1a0f00', fontWeight: 600,
-                  }
+                  background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+                  color: '#1a0f00', fontWeight: 600,
+                }
                 : {
-                    background: 'rgba(240,237,232,0.1)',
-                    border: '1px solid rgba(240,237,232,0.18)',
-                    color: tokens.textMuted,
-                  }),
+                  background: 'rgba(240,237,232,0.1)',
+                  border: '1px solid rgba(240,237,232,0.18)',
+                  color: tokens.textMuted,
+                }),
             }}>
-              {user.isVip ? '会员' : '普通用户'}
+              {user.isVip ? <>会员</> : '普通用户'}
             </span>
           </div>
+          {user.isVip && user.vipExpiredAt && (
+            <div style={{
+              fontFamily: tokens.fontBody, fontSize: 11,
+              color: tokens.textMuted, letterSpacing: '0.04em',
+            }}>
+              到期：{new Date(user.vipExpiredAt).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* VIP upsell (only for non-VIP) */}
-      {!user.isVip && (
+      {/* VIP action */}
+      {user.isVip ? (
+        <button
+          onClick={() => { openModal('vip'); onClose(); }}
+          style={{
+            width: '100%', padding: '11px 0',
+            background: 'rgba(201,145,42,0.12)',
+            border: '1px solid rgba(201,145,42,0.35)',
+            borderRadius: 4, cursor: 'pointer',
+            fontFamily: tokens.fontDisplay, fontSize: 14,
+            color: tokens.accentGold, letterSpacing: '0.14em',
+            marginBottom: 8,
+            transition: 'opacity 0.2s ease',
+          }}
+        >
+          续费会员
+        </button>
+      ) : (
         <>
           <p style={{
             fontFamily: tokens.fontBody, fontSize: 11,

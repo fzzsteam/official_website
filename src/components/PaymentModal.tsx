@@ -122,10 +122,9 @@ const PaymentModal: React.FC = () => {
           }
 
           if (result.status === 'paid') {
-            setStatus('paid');
             clearInterval(id);
             await refreshUser();
-            closeModal();
+            setStatus('paid');
           }
         })
         .catch((requestError) => {
@@ -151,10 +150,58 @@ const PaymentModal: React.FC = () => {
     };
   }, [closeModal, openModal, orderNo, refreshUser, status]);
 
+  useEffect(() => {
+    if (status !== 'paid') return;
+    const id = setTimeout(() => closeModal(), 2500);
+    return () => clearTimeout(id);
+  }, [status, closeModal]);
+
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   if (!selectedPlan) return null;
+
+  if (status === 'paid') {
+    return (
+      <Overlay onClick={closeModal}>
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-[440px] mx-4 md:mx-0"
+          style={{
+            borderRadius: 12,
+            background: 'linear-gradient(180deg, #272018 0%, #1c1610 100%)',
+            border: '1px solid rgba(201,145,42,0.4)',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+            padding: '52px 28px',
+            position: 'relative',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%', margin: '0 auto 20px',
+            background: 'linear-gradient(135deg, #C9912A, #d8a24d)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a0f00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div style={{
+            fontFamily: tokens.fontDisplay, fontSize: 22,
+            color: tokens.textPrimary, letterSpacing: '0.12em', marginBottom: 10,
+          }}>
+            支付成功
+          </div>
+          <div style={{
+            fontFamily: tokens.fontBody, fontSize: 13,
+            color: tokens.textMuted, letterSpacing: '0.06em',
+          }}>
+            会员已开通，畅享全站短剧
+          </div>
+        </div>
+      </Overlay>
+    );
+  }
 
   return (
     <Overlay onClick={closeModal}>

@@ -149,7 +149,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialDrama
   }, [refreshUser]);
 
   const selectPlan = useCallback((plan: VipPlan) => {
-    setState((s) => ({ ...s, selectedPlan: plan, modal: 'payment' }));
+    setState((s) => ({
+      ...s,
+      selectedPlan: plan,
+      modal: s.user ? 'payment' : 'login',
+    }));
   }, []);
 
   return (
