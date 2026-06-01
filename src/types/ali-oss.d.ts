@@ -4,6 +4,7 @@ declare module 'ali-oss' {
     bucket: string;
     accessKeyId: string;
     accessKeySecret: string;
+    secure?: boolean;
   }
 
   interface SignatureUrlOptions {
