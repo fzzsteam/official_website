@@ -305,7 +305,7 @@ const VipModal: React.FC = () => {
             <ShieldIcon /> 安全支付
           </span>
           <span style={{ color: 'rgba(240,237,232,0.2)' }}>|</span>
-          <span>随时可取消自动续费</span>
+          <span>到期不自动续费</span>
         </div>
       </div>
     </Overlay>
