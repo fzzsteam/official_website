@@ -4,6 +4,8 @@ import { createSession } from '@/lib/auth/session';
 import { normalizePhone, verifySmsCode } from '@/lib/auth/sms-code';
 import { prisma } from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 function isVipActive(vipExpiredAt: Date | null) {
   return vipExpiredAt ? vipExpiredAt.getTime() > Date.now() : false;
 }

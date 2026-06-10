@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { ok, fail } from '@/lib/api/response';
 import { registerOrganization } from '@/lib/admin/organization-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const organization = await registerOrganization(await request.json());

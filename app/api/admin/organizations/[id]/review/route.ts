@@ -3,6 +3,8 @@ import { ok, fail } from '@/lib/api/response';
 import { requireAdminRole, isAdminAuthError } from '@/lib/admin-auth/require-admin';
 import { reviewOrganization } from '@/lib/admin/organization-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
     const adminUser = await requireAdminRole();

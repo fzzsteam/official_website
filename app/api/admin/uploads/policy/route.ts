@@ -3,6 +3,8 @@ import { ok, fail } from '@/lib/api/response';
 import { requireAdminSession, assertApprovedOrganization, isAdminAuthError } from '@/lib/admin-auth/require-admin';
 import { createUploadPolicy } from '@/lib/admin-upload/upload-service';
 
+export const dynamic = 'force-dynamic';
+
 const policySchema = z.object({
   fileKind: z.enum(['license', 'cover', 'poster', 'trailer', 'episode', 'cast']),
 });

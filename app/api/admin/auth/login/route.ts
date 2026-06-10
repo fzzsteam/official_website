@@ -3,6 +3,8 @@ import { ok, fail } from '@/lib/api/response';
 import { authenticateAdmin } from '@/lib/admin-auth/service';
 import { createAdminSession } from '@/lib/admin-auth/session';
 
+export const dynamic = 'force-dynamic';
+
 const loginSchema = z.object({
   phone: z.string().min(1),
   password: z.string().min(1),

@@ -48,3 +48,13 @@ test('App fetches drama detail for cast and recommendations', () => {
   assert.match(source, /\/api\/dramas/, 'App should fetch from /api/dramas');
   assert.doesNotMatch(source, /mockCast|mockRecommendations/, 'App should not use mock data');
 });
+
+test('admin pages use admin API helper and backend routes', () => {
+  const login = read('app/admin/login/page.tsx');
+  const dramas = read('app/admin/dramas/page.tsx');
+  const dramaDetail = read('app/admin/dramas/[id]/page.tsx');
+
+  assert.match(login, /adminApi/);
+  assert.match(dramas, /\/api\/admin\/dramas/);
+  assert.match(dramaDetail, /\/api\/admin\/dramas\/\$\{id\}/);
+});

@@ -2,6 +2,8 @@ import { fail, ok } from '@/lib/api/response';
 import { getSessionUserId } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 function isVipActive(vipExpiredAt: Date | null) {
   return vipExpiredAt ? vipExpiredAt.getTime() > Date.now() : false;
 }

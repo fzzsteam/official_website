@@ -2,6 +2,8 @@ import { ok, fail } from '@/lib/api/response';
 import { requireAdminRole, isAdminAuthError } from '@/lib/admin-auth/require-admin';
 import { getOrganizationById } from '@/lib/admin/organization-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
     await requireAdminRole();

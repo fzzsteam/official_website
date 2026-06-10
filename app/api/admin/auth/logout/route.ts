@@ -1,6 +1,8 @@
 import { fail, ok } from '@/lib/api/response';
 import { clearAdminSession } from '@/lib/admin-auth/session';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     clearAdminSession();

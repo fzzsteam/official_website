@@ -20,7 +20,7 @@ const AboutPage: React.FC = () => (
       <InfoRow label="公司名称">深圳市方直智胜科技有限公司</InfoRow>
       <InfoRow label="办公地址">深圳市南山区南头街道马家龙社区大新路198号创新大厦B栋901</InfoRow>
       <InfoRow label="经营范围">互联网信息服务；人工智能技术研发；影视内容制作；软件开发</InfoRow>
-
+      <InfoRow label="备案号">粤ICP备2026044251号</InfoRow>
     </PageSection>
   </InnerPage>
 );
