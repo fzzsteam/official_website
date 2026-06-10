@@ -59,3 +59,24 @@ test('seed.ts contains default membership plans', () => {
   assert.match(seed, /365天会员/);
   assert.match(seed, /19900/);
 });
+
+test('schema.prisma defines admin backend models and ownership fields', () => {
+  const schema = readSchema();
+
+  assert.match(schema, /model\s+AdminUser\s+\{/);
+  assert.match(schema, /@@map\("admin_users"\)/);
+  assert.match(schema, /model\s+Organization\s+\{/);
+  assert.match(schema, /@@map\("organizations"\)/);
+  assert.match(schema, /ownerType\s+String\s+@default\("admin"\)\s+@map\("owner_type"\)/);
+  assert.match(schema, /reviewStatus\s+String\s+@default\("draft"\)\s+@map\("review_status"\)/);
+});
+
+test('admin migration creates backend tables and indexes', () => {
+  const migration = fs.readFileSync(path.join(root, 'prisma/migrations/0002_admin_backend/migration.sql'), 'utf8');
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS `admin_users`/i);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS `organizations`/i);
+  assert.match(migration, /ALTER TABLE `dramas` ADD COLUMN `owner_type`/i);
+  assert.match(migration, /uk_admin_users_phone/i);
+  assert.match(migration, /uk_organizations_credit_code/i);
+});

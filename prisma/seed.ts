@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import bcrypt from 'bcryptjs';
 
 function loadEnvFile(filePath: string) {
   const abs = resolve(process.cwd(), filePath);
@@ -21,8 +22,36 @@ loadEnvFile('.env');
 const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter });
 
+const DEFAULT_ADMIN_ID = '00000000-0000-4000-8000-000000000001';
+
+async function hashAdminPassword(password: string) {
+  return bcrypt.hash(password, 10);
+}
 
 async function main() {
+  // ── 默认管理员账号 ────────────────────────────────────────────
+  const defaultAdminPhone = process.env.DEFAULT_ADMIN_PHONE || '13800000000';
+  const defaultAdminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Admin123456';
+  const defaultAdminDisplayName = process.env.DEFAULT_ADMIN_DISPLAY_NAME || '系统管理员';
+  const defaultAdminPasswordHash = await hashAdminPassword(defaultAdminPassword);
+
+  await prisma.adminUser.upsert({
+    where: { phone: defaultAdminPhone },
+    create: {
+      id: DEFAULT_ADMIN_ID,
+      phone: defaultAdminPhone,
+      passwordHash: defaultAdminPasswordHash,
+      role: 'admin',
+      displayName: defaultAdminDisplayName,
+      status: 'active',
+    },
+    update: {
+      displayName: defaultAdminDisplayName,
+      role: 'admin',
+      status: 'active',
+    },
+  });
+
   // ── 会员套餐 ──────────────────────────────────────────────────
   await prisma.membershipPlan.upsert({
     where: { code: '30d' },
@@ -40,8 +69,8 @@ async function main() {
   const p1 = `dramas/feng-kuang-de-lizhi`;
   await prisma.drama.upsert({
     where: { slug: 'feng-kuang-de-lizhi' },
-    create: { id: d1, slug: 'feng-kuang-de-lizhi', title: '疯狂的荔枝', subtitle: '一颗荔枝 · 一场传奇', synopsis: '大唐盛世，岭南荔枝声名远播。御史柳承业奉命押送一批珍贵荔枝进京，不料途中遭遇奇人异事，一颗小小的荔枝竟牵动出一段啼笑皆非的江湖恩怨。书生石头、侠女苏凌薇、神秘客秦烈，各怀心事，命运交织。荔枝传情，笑中有泪，疯狂之中自有真情。', coverPath: `${p1}/poster.jpg`, posterPath: `${p1}/cover.jpg`, trailerPath: `${p1}/trailer.mp4`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-03-01'), sortOrder: 1 },
-    update: { coverPath: `${p1}/poster.jpg`, posterPath: `${p1}/cover.jpg`, trailerPath: `${p1}/trailer.mp4` },
+    create: { id: d1, slug: 'feng-kuang-de-lizhi', title: '疯狂的荔枝', subtitle: '一颗荔枝 · 一场传奇', synopsis: '大唐盛世，岭南荔枝声名远播。御史柳承业奉命押送一批珍贵荔枝进京，不料途中遭遇奇人异事，一颗小小的荔枝竟牵动出一段啼笑皆非的江湖恩怨。书生石头、侠女苏凌薇、神秘客秦烈，各怀心事，命运交织。荔枝传情，笑中有泪，疯狂之中自有真情。', coverPath: `${p1}/poster.jpg`, posterPath: `${p1}/cover.jpg`, trailerPath: `${p1}/trailer.mp4`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-03-01'), sortOrder: 1, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved', reviewedByAdminUserId: DEFAULT_ADMIN_ID, reviewedAt: new Date() },
+    update: { coverPath: `${p1}/poster.jpg`, posterPath: `${p1}/cover.jpg`, trailerPath: `${p1}/trailer.mp4`, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved' },
   });
   for (const [id, code, name] of [['bad5b61b-cc01-494a-b1f8-f240b7467e5b','costume','古装'],['58a24916-e26a-4f82-ac04-b449318e816b','comedy','喜剧']] as const) {
     await prisma.dramaGenre.upsert({ where: { uk_drama_genres_drama_genre: { dramaId: d1, genreCode: code } }, create: { id, dramaId: d1, genreCode: code, genreName: name }, update: { genreName: name } });
@@ -75,8 +104,8 @@ async function main() {
   const p2 = `dramas/zhou-dao-yu-zhuge-lang`;
   await prisma.drama.upsert({
     where: { slug: 'zhou-dao-yu-zhuge-lang' },
-    create: { id: d2, slug: 'zhou-dao-yu-zhuge-lang', title: '周道与诸葛浪', subtitle: '乱世情，江湖缘', synopsis: '落魄举子周道一朝遭奸人陷害，流落江湖。偶遇出身名门却不羁江湖的诸葛浪，两人性情相悖，却在一次次磕磕绊绊中渐生情愫。命运弄人，恩怨交织，一段乱世儿女情跃然而出。', coverPath: `${p2}/cover.png`, posterPath: `${p2}/poster.png`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-04-01'), sortOrder: 2 },
-    update: { coverPath: `${p2}/cover.png`, posterPath: `${p2}/poster.png` },
+    create: { id: d2, slug: 'zhou-dao-yu-zhuge-lang', title: '周道与诸葛浪', subtitle: '乱世情，江湖缘', synopsis: '落魄举子周道一朝遭奸人陷害，流落江湖。偶遇出身名门却不羁江湖的诸葛浪，两人性情相悖，却在一次次磕磕绊绊中渐生情愫。命运弄人，恩怨交织，一段乱世儿女情跃然而出。', coverPath: `${p2}/cover.png`, posterPath: `${p2}/poster.png`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-04-01'), sortOrder: 2, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved', reviewedByAdminUserId: DEFAULT_ADMIN_ID, reviewedAt: new Date() },
+    update: { coverPath: `${p2}/cover.png`, posterPath: `${p2}/poster.png`, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved' },
   });
   for (const [id, code, name] of [['7943dcd5-59b7-4741-8b8d-058ed42155c8','costume','古装'],['c32cf5be-c653-4cc9-a838-43ec90fe1ee6','romance','爱情']] as const) {
     await prisma.dramaGenre.upsert({ where: { uk_drama_genres_drama_genre: { dramaId: d2, genreCode: code } }, create: { id, dramaId: d2, genreCode: code, genreName: name }, update: { genreName: name } });
@@ -101,8 +130,8 @@ async function main() {
   const p3 = `dramas/zui-hou-liao-dao-leng-mian-xian-jun`;
   await prisma.drama.upsert({
     where: { slug: 'zui-hou-liao-dao-leng-mian-xian-jun' },
-    create: { id: d3, slug: 'zui-hou-liao-dao-leng-mian-xian-jun', title: '醉后撩到冷面仙君', subtitle: '一醉误撩，千年禁忌', synopsis: '仙界第一冷面战神闻清辞，端方肃穆，百年未逾矩。直到一夜误饮忘情酒，被凡间莽撞女子姜梨酒撞个正着。女子醉话连篇，句句撩动禁地，仙君从此破了清规，破了戒，也破了心。', coverPath: `${p3}/cover.png`, posterPath: `${p3}/poster.png`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-05-01'), sortOrder: 3 },
-    update: { coverPath: `${p3}/cover.png`, posterPath: `${p3}/poster.png` },
+    create: { id: d3, slug: 'zui-hou-liao-dao-leng-mian-xian-jun', title: '醉后撩到冷面仙君', subtitle: '一醉误撩，千年禁忌', synopsis: '仙界第一冷面战神闻清辞，端方肃穆，百年未逾矩。直到一夜误饮忘情酒，被凡间莽撞女子姜梨酒撞个正着。女子醉话连篇，句句撩动禁地，仙君从此破了清规，破了戒，也破了心。', coverPath: `${p3}/cover.png`, posterPath: `${p3}/poster.png`, status: 'published', releaseStatus: 'released', publishedAt: new Date('2025-05-01'), sortOrder: 3, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved', reviewedByAdminUserId: DEFAULT_ADMIN_ID, reviewedAt: new Date() },
+    update: { coverPath: `${p3}/cover.png`, posterPath: `${p3}/poster.png`, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved' },
   });
   for (const [id, code, name] of [['8d184baf-805d-49bd-8e00-8ff231bc0786','xianxia','仙侠'],['66b71d32-1d92-4e66-bf5a-d0f222d1008e','romance','爱情']] as const) {
     await prisma.dramaGenre.upsert({ where: { uk_drama_genres_drama_genre: { dramaId: d3, genreCode: code } }, create: { id, dramaId: d3, genreCode: code, genreName: name }, update: { genreName: name } });
@@ -138,8 +167,8 @@ async function main() {
   for (const u of upcoming) {
     await prisma.drama.upsert({
       where: { slug: u.slug },
-      create: { id: u.id, slug: u.slug, title: u.title, subtitle: u.subtitle, synopsis: u.synopsis, coverPath: u.cover, status: 'published', releaseStatus: 'upcoming', publishedAt: null, sortOrder: u.sortOrder },
-      update: { coverPath: u.cover },
+      create: { id: u.id, slug: u.slug, title: u.title, subtitle: u.subtitle, synopsis: u.synopsis, coverPath: u.cover, status: 'published', releaseStatus: 'upcoming', publishedAt: null, sortOrder: u.sortOrder, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved', reviewedByAdminUserId: DEFAULT_ADMIN_ID, reviewedAt: new Date() },
+      update: { coverPath: u.cover, ownerType: 'admin', ownerAdminUserId: DEFAULT_ADMIN_ID, reviewStatus: 'approved' },
     });
     for (const [id, code, name] of u.genres) {
       await prisma.dramaGenre.upsert({ where: { uk_drama_genres_drama_genre: { dramaId: u.id, genreCode: code } }, create: { id, dramaId: u.id, genreCode: code, genreName: name }, update: { genreName: name } });

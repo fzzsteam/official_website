@@ -21,6 +21,9 @@ const envSchema = z.object({
   WECHAT_PAY_PUBLIC_KEY_BASE64: z.string().min(1),
   WECHAT_PAY_NOTIFY_URL: z.string().url(),
   NEXT_PUBLIC_SITE_URL: z.string().url(),
+  DEFAULT_ADMIN_PHONE: z.string().min(1).default('13800000000'),
+  DEFAULT_ADMIN_PASSWORD: z.string().min(8).default('Admin123456'),
+  DEFAULT_ADMIN_DISPLAY_NAME: z.string().min(1).default('系统管理员'),
 });
 
 export type Env = z.infer<typeof envSchema>;

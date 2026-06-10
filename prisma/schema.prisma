@@ -97,25 +97,39 @@ model WechatPaymentNotification {
 }
 
 model Drama {
-  id              String           @id @db.Char(36)
-  slug            String           @unique @db.VarChar(128)
-  title           String           @db.VarChar(150)
-  subtitle        String?          @db.VarChar(255)
-  synopsis        String?          @db.Text
-  coverPath       String           @map("cover_path") @db.VarChar(255)
-  posterPath      String?          @map("poster_path") @db.VarChar(255)
-  trailerPath     String?          @map("trailer_path") @db.VarChar(255)
-  status          String           @default("draft") @db.VarChar(32)
-  releaseStatus   String           @default("upcoming") @map("release_status") @db.VarChar(32)
-  publishedAt     DateTime?        @map("published_at") @db.DateTime(3)
-  sortOrder       Int              @default(0) @map("sort_order")
-  createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt       DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
-  genres          DramaGenre[]
-  episodes        Episode[]
-  castMembers     CastMember[]
-  recommendations Recommendation[]
+  id                    String           @id @db.Char(36)
+  slug                  String           @unique @db.VarChar(128)
+  title                 String           @db.VarChar(150)
+  subtitle              String?          @db.VarChar(255)
+  synopsis              String?          @db.Text
+  coverPath             String           @map("cover_path") @db.VarChar(255)
+  posterPath            String?          @map("poster_path") @db.VarChar(255)
+  trailerPath           String?          @map("trailer_path") @db.VarChar(255)
+  status                String           @default("draft") @db.VarChar(32)
+  releaseStatus         String           @default("upcoming") @map("release_status") @db.VarChar(32)
+  publishedAt           DateTime?        @map("published_at") @db.DateTime(3)
+  sortOrder             Int              @default(0) @map("sort_order")
+  createdAt             DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  ownerType             String           @default("admin") @map("owner_type") @db.VarChar(32)
+  ownerAdminUserId      String?          @map("owner_admin_user_id") @db.Char(36)
+  organizationId        String?          @map("organization_id") @db.Char(36)
+  reviewStatus          String           @default("draft") @map("review_status") @db.VarChar(32)
+  submittedAt           DateTime?        @map("submitted_at") @db.DateTime(3)
+  reviewedByAdminUserId String?          @map("reviewed_by_admin_user_id") @db.Char(36)
+  reviewedAt            DateTime?        @map("reviewed_at") @db.DateTime(3)
+  reviewRejectReason    String?          @map("review_reject_reason") @db.VarChar(500)
+  genres                DramaGenre[]
+  episodes              Episode[]
+  castMembers           CastMember[]
+  recommendations       Recommendation[]
+  ownerAdmin            AdminUser?       @relation("DramaOwnerAdmin", fields: [ownerAdminUserId], references: [id])
+  organization          Organization?    @relation(fields: [organizationId], references: [id])
+  reviewedBy            AdminUser?       @relation("DramaReviewer", fields: [reviewedByAdminUserId], references: [id])
 
+  @@index([ownerAdminUserId], name: "idx_dramas_owner_admin_user_id")
+  @@index([organizationId], name: "idx_dramas_organization_id")
+  @@index([reviewStatus], name: "idx_dramas_review_status")
   @@map("dramas")
 }
 
@@ -180,4 +194,49 @@ model Recommendation {
 
   @@unique([recommendationType, dramaId], name: "uk_recommendations_type_drama")
   @@map("recommendations")
+}
+
+model AdminUser {
+  id                    String         @id @db.Char(36)
+  phone                 String         @unique @db.VarChar(32)
+  passwordHash          String         @map("password_hash") @db.VarChar(255)
+  role                  String         @db.VarChar(32)
+  displayName           String         @map("display_name") @db.VarChar(100)
+  organizationId        String?        @map("organization_id") @db.Char(36)
+  status                String         @default("active") @db.VarChar(32)
+  lastLoginAt           DateTime?      @map("last_login_at") @db.DateTime(3)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+  organization          Organization?  @relation(fields: [organizationId], references: [id])
+  reviewedOrganizations Organization[] @relation("OrganizationReviewer")
+  reviewedDramas        Drama[]        @relation("DramaReviewer")
+  ownedDramas           Drama[]        @relation("DramaOwnerAdmin")
+
+  @@index([organizationId], name: "idx_admin_users_organization_id")
+  @@map("admin_users")
+}
+
+model Organization {
+  id                    String      @id @db.Char(36)
+  name                  String      @db.VarChar(150)
+  contactName           String      @map("contact_name") @db.VarChar(100)
+  contactPhone          String      @map("contact_phone") @db.VarChar(32)
+  email                 String?     @db.VarChar(150)
+  creditCode            String      @unique @map("credit_code") @db.VarChar(64)
+  address               String?     @db.VarChar(255)
+  description           String?     @db.Text
+  businessLicensePath   String      @map("business_license_path") @db.VarChar(255)
+  status                String      @default("pending") @db.VarChar(32)
+  reviewedByAdminUserId String?     @map("reviewed_by_admin_user_id") @db.Char(36)
+  reviewedAt            DateTime?   @map("reviewed_at") @db.DateTime(3)
+  rejectReason          String?     @map("reject_reason") @db.VarChar(500)
+  createdAt             DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime    @updatedAt @map("updated_at") @db.DateTime(3)
+  accounts              AdminUser[]
+  dramas                Drama[]
+  reviewedBy            AdminUser?  @relation("OrganizationReviewer", fields: [reviewedByAdminUserId], references: [id])
+
+  @@index([status], name: "idx_organizations_status")
+  @@index([reviewedByAdminUserId], name: "idx_organizations_reviewed_by")
+  @@map("organizations")
 }
