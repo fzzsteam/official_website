@@ -9,6 +9,15 @@ export function createAdminAuthError(code: string, message: string, status = 401
   return error;
 }
 
+export function isAdminAuthError(error: unknown): error is Error & { code: string; status: number } {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const candidate = error as Error & { code?: unknown; status?: unknown };
+  return typeof candidate.code === 'string' && typeof candidate.status === 'number';
+}
+
 export async function requireAdminSession(): Promise<CurrentAdminUser> {
   const user = await getCurrentAdminUser();
   if (!user) {

@@ -45,3 +45,10 @@ test('admin guard distinguishes admin role and organization role', () => {
   assert.match(source, /requireOrganizationRole/);
   assert.match(source, /ADMIN_FORBIDDEN/);
 });
+
+test('admin guard exports a type guard for admin auth errors', () => {
+  const source = read('src/lib/admin-auth/require-admin.ts');
+
+  assert.match(source, /export function isAdminAuthError\(/);
+  assert.match(source, /error is Error & \{ code: string; status: number \}/);
+});
