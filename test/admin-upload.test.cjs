@@ -24,3 +24,18 @@ test('upload policy route requires admin session', () => {
   assert.match(source, /requireAdminSession/);
   assert.match(source, /createUploadPolicy/);
 });
+
+test('assertAllowedUploadPath rejects path traversal segments', () => {
+  const source = read('src/lib/admin-upload/upload-service.ts');
+
+  assert.match(source, /posix\.normalize/);
+  assert.match(source, /split\('\/'\)/);
+  assert.match(source, /includes\('\.\.'\)/);
+});
+
+test('getAllowedUploadPrefix throws typed admin auth error for invalid owner', () => {
+  const source = read('src/lib/admin-upload/upload-service.ts');
+
+  assert.doesNotMatch(source, /new Error\('INVALID_UPLOAD_OWNER'\)/);
+  assert.match(source, /createAdminAuthError\('ADMIN_FORBIDDEN'/);
+});

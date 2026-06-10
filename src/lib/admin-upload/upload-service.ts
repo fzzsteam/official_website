@@ -1,8 +1,10 @@
 import 'server-only';
 
+import { posix } from 'node:path';
 import { createHmac, randomUUID } from 'node:crypto';
 import { getEnv } from '@/lib/config/env';
 import type { CurrentAdminUser } from '@/lib/admin-auth/service';
+import { createAdminAuthError } from '@/lib/admin-auth/require-admin';
 
 const UPLOAD_EXPIRES_SECONDS = 600;
 
@@ -13,18 +15,18 @@ export function getAllowedUploadPrefix(adminUser: CurrentAdminUser) {
   if (adminUser.role === 'organization' && adminUser.organizationId) {
     return `organizations/${adminUser.organizationId}/`;
   }
-  throw new Error('INVALID_UPLOAD_OWNER');
+  throw createAdminAuthError('ADMIN_FORBIDDEN', '账号配置异常，请联系管理员', 403);
 }
 
 export function assertAllowedUploadPath(adminUser: CurrentAdminUser, objectPath: string) {
-  const normalized = objectPath.replace(/^\/+/, '');
+  const stripped = objectPath.replace(/^\/+/, '');
+  const normalized = posix.normalize(stripped);
   const prefix = getAllowedUploadPrefix(adminUser);
-  if (!normalized.startsWith(prefix)) {
-    const error = new Error('OSS path 不在授权范围内') as Error & { code: string; status: number };
-    error.code = 'INVALID_UPLOAD_PATH';
-    error.status = 403;
-    throw error;
+
+  if (normalized.split('/').includes('..') || !normalized.startsWith(prefix)) {
+    throw createAdminAuthError('INVALID_UPLOAD_PATH', 'OSS path 不在授权范围内', 403);
   }
+
   return normalized;
 }
 
