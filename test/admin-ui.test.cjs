@@ -105,3 +105,15 @@ test('admin episodes page uses drawer workspace with video previews and publish 
   assert.match(page, /\/status/);
   assert.doesNotMatch(page, /accessLevel/);
 });
+
+test('admin organizations page uses drawer workspace and admin-create form', () => {
+  const page = read('app/admin/organizations/page.tsx');
+
+  assert.match(page, /AdminDrawer/);
+  assert.match(page, /AdminListToolbar/);
+  assert.match(page, /AdminMediaUpload/);
+  assert.match(page, /initialStatus/);
+  assert.match(page, /直接启用/);
+  assert.match(page, /待审核/);
+  assert.match(page, /\/api\/admin\/organizations\/\$\{organization\.id\}\/review/);
+});
