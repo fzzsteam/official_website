@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { adminApi } from '@/lib/admin-ui/api';
 import { FormField, adminInputClassName } from '@/components/admin/FormField';
@@ -38,6 +39,12 @@ export default function AdminLoginPage() {
           登录
         </button>
       </form>
+      <div className="mt-4 border-t border-white/10 pt-4 text-center text-sm text-stone-300">
+        机构还没有账号？
+        <Link className="ml-2 text-brand-gold hover:underline" href="/admin/register">
+          机构注册
+        </Link>
+      </div>
     </div>
   );
 }
