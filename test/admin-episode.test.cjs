@@ -26,3 +26,13 @@ test('episode admin routes require approved admin session', () => {
   assert.match(source, /assertApprovedOrganization/);
   assert.match(source, /upsertAdminEpisode/);
 });
+
+test('admin episode service returns signed video preview URLs', () => {
+  const media = read('src/lib/admin/media-url.ts');
+  const episode = read('src/lib/admin/episode-admin-service.ts');
+
+  assert.match(media, /mapAdminEpisodeMedia/);
+  assert.match(episode, /videoPreviewUrl/);
+  assert.match(episode, /videoUrl/);
+  assert.match(episode, /mapAdminEpisodeMedia/);
+});

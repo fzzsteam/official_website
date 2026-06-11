@@ -35,3 +35,16 @@ test('drama submit API requires an approved organization or admin', () => {
   assert.match(source, /assertApprovedOrganization/);
   assert.match(source, /submitDramaForReview/);
 });
+
+test('admin drama service maps media paths to signed admin URLs', () => {
+  const media = read('src/lib/admin/media-url.ts');
+  const drama = read('src/lib/admin/drama-admin-service.ts');
+
+  assert.match(media, /signAdminMediaPath/);
+  assert.match(media, /mapAdminDramaMedia/);
+  assert.match(media, /signOssPath/);
+  assert.match(drama, /mapAdminDramaMedia/);
+  assert.match(drama, /posterUrl/);
+  assert.match(drama, /coverUrl/);
+  assert.doesNotMatch(drama, /trailerUrl/);
+});

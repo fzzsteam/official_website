@@ -34,3 +34,12 @@ test('register API creates pending organization account', () => {
   assert.match(route, /ok\s*\(/);
   assert.match(route, /fail\s*\(/);
 });
+
+test('organization service returns signed business license URL', () => {
+  const media = read('src/lib/admin/media-url.ts');
+  const organization = read('src/lib/admin/organization-service.ts');
+
+  assert.match(media, /mapAdminOrganizationMedia/);
+  assert.match(organization, /businessLicenseUrl/);
+  assert.match(organization, /mapAdminOrganizationMedia/);
+});

@@ -5,6 +5,12 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import type { CurrentAdminUser } from '@/lib/admin-auth/service';
 import { assertAllowedUploadPath } from '@/lib/admin-upload/upload-service';
+import { mapAdminDramaMedia } from '@/lib/admin/media-url';
+
+type AdminDramaMedia = {
+  coverUrl: string | null;
+  posterUrl: string | null;
+};
 
 export const dramaInputSchema = z.object({
   slug: z.string().min(1).max(128),
@@ -34,15 +40,17 @@ function getDramaOwnershipWhere(adminUser: CurrentAdminUser) {
   return { organizationId: adminUser.organizationId || '__missing__' };
 }
 
-export async function listAdminDramas(adminUser: CurrentAdminUser) {
-  return prisma.drama.findMany({
+export async function listAdminDramas(adminUser: CurrentAdminUser): Promise<AdminDramaMedia[]> {
+  const rows = await prisma.drama.findMany({
     where: getDramaOwnershipWhere(adminUser),
     orderBy: [{ updatedAt: 'desc' }],
     include: { _count: { select: { episodes: true } }, organization: true },
   });
+
+  return rows.map(mapAdminDramaMedia);
 }
 
-export async function getAdminDrama(adminUser: CurrentAdminUser, dramaId: string) {
+export async function getAdminDrama(adminUser: CurrentAdminUser, dramaId: string): Promise<AdminDramaMedia> {
   const drama = await prisma.drama.findFirst({
     where: { id: dramaId, ...getDramaOwnershipWhere(adminUser) },
     include: { _count: { select: { episodes: true } }, organization: true },
@@ -50,16 +58,20 @@ export async function getAdminDrama(adminUser: CurrentAdminUser, dramaId: string
   if (!drama) {
     throw createDramaAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
   }
-  return drama;
+
+  return mapAdminDramaMedia(drama);
 }
 
-export async function createAdminDrama(adminUser: CurrentAdminUser, input: z.infer<typeof dramaInputSchema>) {
+export async function createAdminDrama(
+  adminUser: CurrentAdminUser,
+  input: z.infer<typeof dramaInputSchema>,
+): Promise<AdminDramaMedia> {
   const data = dramaInputSchema.parse(input);
   assertAllowedUploadPath(adminUser, data.coverPath);
   if (data.posterPath) assertAllowedUploadPath(adminUser, data.posterPath);
   if (data.trailerPath) assertAllowedUploadPath(adminUser, data.trailerPath);
 
-  return prisma.drama.create({
+  const drama = await prisma.drama.create({
     data: {
       id: randomUUID(),
       slug: data.slug,
@@ -78,13 +90,15 @@ export async function createAdminDrama(adminUser: CurrentAdminUser, input: z.inf
       reviewStatus: 'draft',
     },
   });
+
+  return mapAdminDramaMedia(drama);
 }
 
 export async function updateAdminDrama(
   adminUser: CurrentAdminUser,
   dramaId: string,
   input: z.infer<typeof dramaInputSchema>,
-) {
+): Promise<AdminDramaMedia> {
   const data = dramaInputSchema.parse(input);
   const drama = await prisma.drama.findFirst({ where: { id: dramaId, ...getDramaOwnershipWhere(adminUser) } });
   if (!drama) {
@@ -98,7 +112,7 @@ export async function updateAdminDrama(
   if (data.posterPath) assertAllowedUploadPath(adminUser, data.posterPath);
   if (data.trailerPath) assertAllowedUploadPath(adminUser, data.trailerPath);
 
-  return prisma.drama.update({
+  const updatedDrama = await prisma.drama.update({
     where: { id: dramaId },
     data: {
       slug: data.slug,
@@ -114,16 +128,21 @@ export async function updateAdminDrama(
       reviewRejectReason: null,
     },
   });
+
+  return mapAdminDramaMedia(updatedDrama);
 }
 
-export async function submitDramaForReview(adminUser: CurrentAdminUser, dramaId: string) {
+export async function submitDramaForReview(
+  adminUser: CurrentAdminUser,
+  dramaId: string,
+): Promise<AdminDramaMedia> {
   const drama = await prisma.drama.findFirst({ where: { id: dramaId, ...getDramaOwnershipWhere(adminUser) } });
   if (!drama) {
     throw createDramaAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
   }
 
   if (adminUser.role === 'admin') {
-    return prisma.drama.update({
+    const updatedDrama = await prisma.drama.update({
       where: { id: dramaId },
       data: {
         reviewStatus: 'approved',
@@ -134,9 +153,11 @@ export async function submitDramaForReview(adminUser: CurrentAdminUser, dramaId:
         reviewRejectReason: null,
       },
     });
+
+    return mapAdminDramaMedia(updatedDrama);
   }
 
-  return prisma.drama.update({
+  const updatedDrama = await prisma.drama.update({
     where: { id: dramaId },
     data: {
       reviewStatus: 'submitted',
@@ -145,13 +166,19 @@ export async function submitDramaForReview(adminUser: CurrentAdminUser, dramaId:
       reviewRejectReason: null,
     },
   });
+
+  return mapAdminDramaMedia(updatedDrama);
 }
 
-export async function reviewDrama(adminUserId: string, dramaId: string, input: z.infer<typeof dramaReviewSchema>) {
+export async function reviewDrama(
+  adminUserId: string,
+  dramaId: string,
+  input: z.infer<typeof dramaReviewSchema>,
+): Promise<AdminDramaMedia> {
   const data = dramaReviewSchema.parse(input);
   const approved = data.action === 'approve';
 
-  return prisma.drama.update({
+  const drama = await prisma.drama.update({
     where: { id: dramaId },
     data: {
       reviewStatus: approved ? 'approved' : 'rejected',
@@ -162,6 +189,8 @@ export async function reviewDrama(adminUserId: string, dramaId: string, input: z
       reviewRejectReason: approved ? null : data.reason || '内容未通过审核',
     },
   });
+
+  return mapAdminDramaMedia(drama);
 }
 
 function createDramaAdminError(code: string, message: string, status: number) {

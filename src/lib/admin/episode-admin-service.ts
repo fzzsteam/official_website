@@ -5,6 +5,12 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import type { CurrentAdminUser } from '@/lib/admin-auth/service';
 import { assertAllowedUploadPath } from '@/lib/admin-upload/upload-service';
+import { mapAdminEpisodeMedia } from '@/lib/admin/media-url';
+
+type AdminEpisodeMedia = {
+  videoPreviewUrl: string | null;
+  videoUrl: string | null;
+};
 
 export const episodeInputSchema = z.object({
   episodeNo: z.coerce.number().int().positive(),
@@ -35,22 +41,23 @@ export async function assertDramaWritable(adminUser: CurrentAdminUser, dramaId: 
   return drama;
 }
 
-export async function listAdminEpisodes(adminUser: CurrentAdminUser, dramaId: string) {
+export async function listAdminEpisodes(adminUser: CurrentAdminUser, dramaId: string): Promise<AdminEpisodeMedia[]> {
   await assertDramaWritable(adminUser, dramaId);
-  return prisma.episode.findMany({ where: { dramaId }, orderBy: { episodeNo: 'asc' } });
+  const rows = await prisma.episode.findMany({ where: { dramaId }, orderBy: { episodeNo: 'asc' } });
+  return rows.map(mapAdminEpisodeMedia);
 }
 
 export async function upsertAdminEpisode(
   adminUser: CurrentAdminUser,
   dramaId: string,
   input: z.infer<typeof episodeInputSchema>,
-) {
+): Promise<AdminEpisodeMedia> {
   await assertDramaWritable(adminUser, dramaId);
   const data = episodeInputSchema.parse(input);
   assertAllowedUploadPath(adminUser, data.videoPath);
   if (data.coverPath) assertAllowedUploadPath(adminUser, data.coverPath);
 
-  return prisma.episode.upsert({
+  const episode = await prisma.episode.upsert({
     where: { uk_episodes_drama_episode: { dramaId, episodeNo: data.episodeNo } },
     create: {
       id: randomUUID(),
@@ -76,6 +83,8 @@ export async function upsertAdminEpisode(
       publishedAt: data.status === 'published' ? new Date() : null,
     },
   });
+
+  return mapAdminEpisodeMedia(episode);
 }
 
 export async function deleteAdminEpisode(adminUser: CurrentAdminUser, dramaId: string, episodeId: string) {

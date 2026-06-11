@@ -4,6 +4,11 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { hashAdminPassword } from '@/lib/admin-auth/password';
+import { mapAdminOrganizationMedia } from '@/lib/admin/media-url';
+
+type AdminOrganizationMedia = {
+  businessLicenseUrl: string | null;
+};
 
 export const organizationInputSchema = z.object({
   name: z.string().min(1).max(150),
@@ -63,7 +68,9 @@ function mapOrganization(row: {
   };
 }
 
-export async function registerOrganization(input: z.infer<typeof organizationRegisterSchema>) {
+export async function registerOrganization(
+  input: z.infer<typeof organizationRegisterSchema>,
+): Promise<AdminOrganizationMedia> {
   const data = organizationRegisterSchema.parse(input);
   const organizationId = randomUUID();
   const accountId = randomUUID();
@@ -100,10 +107,12 @@ export async function registerOrganization(input: z.infer<typeof organizationReg
     return createdOrganization;
   });
 
-  return mapOrganization(organization);
+  return mapAdminOrganizationMedia(mapOrganization(organization));
 }
 
-export async function createOrganizationByAdmin(input: z.infer<typeof organizationRegisterSchema>) {
+export async function createOrganizationByAdmin(
+  input: z.infer<typeof organizationRegisterSchema>,
+): Promise<AdminOrganizationMedia> {
   const data = organizationRegisterSchema.parse(input);
   const organizationId = randomUUID();
   const passwordHash = await hashAdminPassword(data.password);
@@ -140,22 +149,26 @@ export async function createOrganizationByAdmin(input: z.infer<typeof organizati
     return createdOrganization;
   });
 
-  return mapOrganization(organization);
+  return mapAdminOrganizationMedia(mapOrganization(organization));
 }
 
-export async function listOrganizations() {
+export async function listOrganizations(): Promise<AdminOrganizationMedia[]> {
   const rows = await prisma.organization.findMany({
     orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
   });
-  return rows.map(mapOrganization);
+  return rows.map((row) => mapAdminOrganizationMedia(mapOrganization(row)));
 }
 
-export async function getOrganizationById(id: string) {
+export async function getOrganizationById(id: string): Promise<AdminOrganizationMedia | null> {
   const row = await prisma.organization.findUnique({ where: { id } });
-  return row ? mapOrganization(row) : null;
+  return row ? mapAdminOrganizationMedia(mapOrganization(row)) : null;
 }
 
-export async function reviewOrganization(id: string, adminUserId: string, input: z.infer<typeof organizationReviewSchema>) {
+export async function reviewOrganization(
+  id: string,
+  adminUserId: string,
+  input: z.infer<typeof organizationReviewSchema>,
+): Promise<AdminOrganizationMedia> {
   const data = organizationReviewSchema.parse(input);
   const now = new Date();
   const approved = data.action === 'approve';
@@ -179,5 +192,5 @@ export async function reviewOrganization(id: string, adminUserId: string, input:
     return updated;
   });
 
-  return mapOrganization(organization);
+  return mapAdminOrganizationMedia(mapOrganization(organization));
 }
