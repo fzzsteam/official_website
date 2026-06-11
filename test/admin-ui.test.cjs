@@ -94,3 +94,14 @@ test('admin dramas page uses drawer workspace and independent status actions', (
   assert.match(page, /posterUrl/);
   assert.doesNotMatch(page, /短标语.*列表/);
 });
+
+test('admin episodes page uses drawer workspace with video previews and publish actions', () => {
+  const page = read('app/admin/dramas/[id]/episodes/page.tsx');
+
+  assert.match(page, /AdminDrawer/);
+  assert.match(page, /AdminMediaPreview/);
+  assert.match(page, /AdminMediaUpload/);
+  assert.match(page, /videoPreviewUrl/);
+  assert.match(page, /\/status/);
+  assert.doesNotMatch(page, /accessLevel/);
+});

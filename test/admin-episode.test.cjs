@@ -48,3 +48,10 @@ test('episode status API publishes and unpublishes independently', () => {
   assert.match(service, /publishedAt:\s*data\.status === 'published'/);
   assert.match(service, /accessLevel:\s*'member'/);
 });
+
+test('episode detail route supports PUT updates for drawer save', () => {
+  const route = read('app/api/admin/dramas/[id]/episodes/[episodeId]/route.ts');
+
+  assert.match(route, /export async function PUT/);
+  assert.match(route, /upsertAdminEpisode/);
+});
