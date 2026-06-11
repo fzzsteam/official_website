@@ -4,8 +4,10 @@ const statusText: Record<string, string> = {
   rejected: '已驳回',
   disabled: '已禁用',
   draft: '草稿',
-  submitted: '审核中',
+  submitted: '待审核',
   published: '已发布',
+  upcoming: '待上架',
+  released: '已上架',
 };
 
 export function StatusBadge({ status }: { status: string }) {

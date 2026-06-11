@@ -39,3 +39,11 @@ test('getAllowedUploadPrefix throws typed admin auth error for invalid owner', (
   assert.doesNotMatch(source, /new Error\('INVALID_UPLOAD_OWNER'\)/);
   assert.match(source, /createAdminAuthError\('ADMIN_FORBIDDEN'/);
 });
+
+test('upload component still requests policy and only submits path', () => {
+  const source = read('src/components/admin/AdminMediaUpload.tsx');
+
+  assert.match(source, /\/api\/admin\/uploads\/policy/);
+  assert.match(source, /onChange\(objectKey\)/);
+  assert.doesNotMatch(source, /onChange\(upload\.host/);
+});
