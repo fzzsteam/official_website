@@ -36,3 +36,15 @@ test('admin episode service returns signed video preview URLs', () => {
   assert.match(episode, /videoUrl/);
   assert.match(episode, /mapAdminEpisodeMedia/);
 });
+
+test('episode status API publishes and unpublishes independently', () => {
+  const route = read('app/api/admin/dramas/[id]/episodes/[episodeId]/status/route.ts');
+  const service = read('src/lib/admin/episode-admin-service.ts');
+
+  assert.match(route, /requireAdminSession/);
+  assert.match(route, /assertApprovedOrganization/);
+  assert.match(route, /updateAdminEpisodeStatus/);
+  assert.match(service, /episodeStatusSchema/);
+  assert.match(service, /publishedAt:\s*data\.status === 'published'/);
+  assert.match(service, /accessLevel:\s*'member'/);
+});

@@ -8,6 +8,7 @@ import { assertAllowedUploadPath } from '@/lib/admin-upload/upload-service';
 import { mapAdminEpisodeMedia } from '@/lib/admin/media-url';
 
 type AdminEpisodeMedia = {
+  [key: string]: unknown;
   videoPreviewUrl: string | null;
   videoUrl: string | null;
 };
@@ -19,8 +20,11 @@ export const episodeInputSchema = z.object({
   videoPath: z.string().min(1).max(255),
   coverPath: z.string().max(255).optional().or(z.literal('')),
   durationSeconds: z.coerce.number().int().min(0).default(0),
-  accessLevel: z.enum(['free', 'member']).default('member'),
   status: z.enum(['draft', 'published']).default('draft'),
+});
+
+export const episodeStatusSchema = z.object({
+  status: z.enum(['draft', 'published']),
 });
 
 function ownershipWhere(adminUser: CurrentAdminUser) {
@@ -68,7 +72,7 @@ export async function upsertAdminEpisode(
       videoPath: data.videoPath,
       coverPath: data.coverPath || null,
       durationSeconds: data.durationSeconds,
-      accessLevel: data.accessLevel,
+      accessLevel: 'member',
       status: data.status,
       publishedAt: data.status === 'published' ? new Date() : null,
     },
@@ -78,12 +82,36 @@ export async function upsertAdminEpisode(
       videoPath: data.videoPath,
       coverPath: data.coverPath || null,
       durationSeconds: data.durationSeconds,
-      accessLevel: data.accessLevel,
+      accessLevel: 'member',
       status: data.status,
       publishedAt: data.status === 'published' ? new Date() : null,
     },
   });
 
+  return mapAdminEpisodeMedia(episode);
+}
+
+export async function updateAdminEpisodeStatus(
+  adminUser: CurrentAdminUser,
+  dramaId: string,
+  episodeId: string,
+  input: z.infer<typeof episodeStatusSchema>,
+): Promise<AdminEpisodeMedia> {
+  await assertDramaWritable(adminUser, dramaId);
+  const data = episodeStatusSchema.parse(input);
+  const result = await prisma.episode.updateMany({
+    where: { id: episodeId, dramaId },
+    data: {
+      status: data.status,
+      publishedAt: data.status === 'published' ? new Date() : null,
+    },
+  });
+
+  if (result.count === 0) {
+    throw createEpisodeAdminError('EPISODE_NOT_FOUND', '分集不存在', 404);
+  }
+
+  const episode = await prisma.episode.findFirstOrThrow({ where: { id: episodeId, dramaId } });
   return mapAdminEpisodeMedia(episode);
 }
 
