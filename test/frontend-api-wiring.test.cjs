@@ -52,9 +52,12 @@ test('App fetches drama detail for cast and recommendations', () => {
 test('admin pages use admin API helper and backend routes', () => {
   const login = read('app/admin/login/page.tsx');
   const dramas = read('app/admin/dramas/page.tsx');
+  const dramaNew = read('app/admin/dramas/new/page.tsx');
   const dramaDetail = read('app/admin/dramas/[id]/page.tsx');
 
   assert.match(login, /adminApi/);
   assert.match(dramas, /\/api\/admin\/dramas/);
-  assert.match(dramaDetail, /\/api\/admin\/dramas\/\$\{id\}/);
+  assert.match(dramas, /\/release/);
+  assert.match(dramaNew, /redirect\('\/admin\/dramas'\)/);
+  assert.match(dramaDetail, /redirect\('\/admin\/dramas'\)/);
 });

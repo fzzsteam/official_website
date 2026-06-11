@@ -81,3 +81,16 @@ test('admin login page exposes organization registration entry', () => {
   assert.match(login, /机构注册/);
   assert.match(login, /href="\/admin\/register"/);
 });
+
+test('admin dramas page uses drawer workspace and independent status actions', () => {
+  const page = read('app/admin/dramas/page.tsx');
+
+  assert.match(page, /AdminDrawer/);
+  assert.match(page, /AdminListToolbar/);
+  assert.match(page, /AdminMediaUpload/);
+  assert.match(page, /GenreMultiSelect/);
+  assert.match(page, /\/api\/admin\/dramas\/\$\{selectedDrama\.id\}\/release/);
+  assert.match(page, /\/api\/admin\/dramas\/\$\{drama\.id\}\/review/);
+  assert.match(page, /posterUrl/);
+  assert.doesNotMatch(page, /短标语.*列表/);
+});
