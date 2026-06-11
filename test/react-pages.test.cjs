@@ -42,3 +42,10 @@ test('Converted React pages preserve key legacy page content', () => {
     }
   }
 });
+
+test('client footer exposes organization registration entry', () => {
+  const footer = read('src/components/Footer.tsx');
+
+  assert.match(footer, /机构入驻/);
+  assert.match(footer, /href="\/admin\/register"/);
+});

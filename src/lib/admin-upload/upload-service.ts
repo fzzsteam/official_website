@@ -8,31 +8,8 @@ import { createAdminAuthError } from '@/lib/admin-auth/require-admin';
 
 const UPLOAD_EXPIRES_SECONDS = 600;
 
-export function getAllowedUploadPrefix(adminUser: CurrentAdminUser) {
-  if (adminUser.role === 'admin') {
-    return `admin/${adminUser.id}/`;
-  }
-  if (adminUser.role === 'organization' && adminUser.organizationId) {
-    return `organizations/${adminUser.organizationId}/`;
-  }
-  throw createAdminAuthError('ADMIN_FORBIDDEN', '账号配置异常，请联系管理员', 403);
-}
-
-export function assertAllowedUploadPath(adminUser: CurrentAdminUser, objectPath: string) {
-  const stripped = objectPath.replace(/^\/+/, '');
-  const normalized = posix.normalize(stripped);
-  const prefix = getAllowedUploadPrefix(adminUser);
-
-  if (normalized.split('/').includes('..') || !normalized.startsWith(prefix)) {
-    throw createAdminAuthError('INVALID_UPLOAD_PATH', 'OSS path 不在授权范围内', 403);
-  }
-
-  return normalized;
-}
-
-export function createUploadPolicy(adminUser: CurrentAdminUser, fileKind: string) {
+function createPolicyForPrefix(prefix: string) {
   const env = getEnv();
-  const prefix = `${getAllowedUploadPrefix(adminUser)}${fileKind}/${new Date().toISOString().slice(0, 10)}/`;
   const objectKey = `${prefix}${randomUUID()}`;
   const expires = new Date(Date.now() + UPLOAD_EXPIRES_SECONDS * 1000).toISOString();
 
@@ -57,4 +34,50 @@ export function createUploadPolicy(adminUser: CurrentAdminUser, fileKind: string
     prefix,
     expires,
   };
+}
+
+export function getAllowedUploadPrefix(adminUser: CurrentAdminUser) {
+  if (adminUser.role === 'admin') {
+    return `admin/${adminUser.id}/`;
+  }
+  if (adminUser.role === 'organization' && adminUser.organizationId) {
+    return `organizations/${adminUser.organizationId}/`;
+  }
+  throw createAdminAuthError('ADMIN_FORBIDDEN', '账号配置异常，请联系管理员', 403);
+}
+
+export function getRegistrationUploadPrefix(fileKind: string) {
+  return `organization-registration/${fileKind}/${new Date().toISOString().slice(0, 10)}/`;
+}
+
+export function assertAllowedUploadPath(adminUser: CurrentAdminUser, objectPath: string) {
+  const stripped = objectPath.replace(/^\/+/, '');
+  const normalized = posix.normalize(stripped);
+  const prefix = getAllowedUploadPrefix(adminUser);
+
+  if (normalized.split('/').includes('..') || !normalized.startsWith(prefix)) {
+    throw createAdminAuthError('INVALID_UPLOAD_PATH', 'OSS path 不在授权范围内', 403);
+  }
+
+  return normalized;
+}
+
+export function assertRegistrationUploadPath(objectPath: string) {
+  const stripped = objectPath.replace(/^\/+/, '');
+  const normalized = posix.normalize(stripped);
+  const prefix = 'organization-registration/license/';
+
+  if (normalized.split('/').includes('..') || !normalized.startsWith(prefix)) {
+    throw createAdminAuthError('INVALID_UPLOAD_PATH', 'OSS path 不在授权范围内', 403);
+  }
+
+  return normalized;
+}
+
+export function createUploadPolicy(adminUser: CurrentAdminUser, fileKind: string) {
+  return createPolicyForPrefix(`${getAllowedUploadPrefix(adminUser)}${fileKind}/${new Date().toISOString().slice(0, 10)}/`);
+}
+
+export function createRegistrationUploadPolicy(fileKind: 'license') {
+  return createPolicyForPrefix(getRegistrationUploadPrefix(fileKind));
 }

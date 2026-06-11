@@ -1,3 +1,4 @@
+import { ZodError } from 'zod';
 import { NextResponse } from 'next/server';
 
 export interface ApiErrorBody {
@@ -20,4 +21,16 @@ export function fail(code: string, message: string, status = 400, cause?: unknow
     console.error(`[API] ${code}:`, cause);
   }
   return NextResponse.json<ApiErrorBody>({ error: { code, message } }, { status });
+}
+
+export function formatZodErrorMessage(error: ZodError, fallback = '请求参数错误') {
+  const messages = error.issues
+    .map((issue) => issue.message.trim())
+    .filter(Boolean);
+
+  if (messages.length === 0) {
+    return fallback;
+  }
+
+  return Array.from(new Set(messages)).join('；');
 }

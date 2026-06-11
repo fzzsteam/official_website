@@ -1,15 +1,26 @@
-export async function adminApi<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
-  });
+import { showAdminToast } from './toast';
 
-  const payload = await response.json();
+export async function adminApi<T>(url: string, init?: RequestInit): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers || {}),
+      },
+    });
+  } catch {
+    const message = '网络请求失败，请稍后重试';
+    showAdminToast({ type: 'error', message });
+    throw new Error(message);
+  }
+
+  const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(payload?.error?.message || '请求失败');
+    const message = payload?.error?.message || '请求失败';
+    showAdminToast({ type: 'error', message });
+    throw new Error(message);
   }
   return payload.data as T;
 }

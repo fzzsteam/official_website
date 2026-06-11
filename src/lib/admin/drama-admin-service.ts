@@ -125,7 +125,16 @@ export async function createAdminDrama(
     });
 
     await replaceDramaGenres(tx, drama.id, data.genreCodes);
-    return getAdminDrama(adminUser, drama.id);
+    const createdDrama = await tx.drama.findFirst({
+      where: { id: drama.id, ...getDramaOwnershipWhere(adminUser) },
+      include: { _count: { select: { episodes: true } }, organization: true, genres: true },
+    });
+
+    if (!createdDrama) {
+      throw createDramaAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
+    }
+
+    return mapAdminDramaMedia(createdDrama);
   });
 }
 
@@ -163,7 +172,16 @@ export async function updateAdminDrama(
     });
 
     await replaceDramaGenres(tx, dramaId, data.genreCodes);
-    return getAdminDrama(adminUser, dramaId);
+    const updatedDrama = await tx.drama.findFirst({
+      where: { id: dramaId, ...getDramaOwnershipWhere(adminUser) },
+      include: { _count: { select: { episodes: true } }, organization: true, genres: true },
+    });
+
+    if (!updatedDrama) {
+      throw createDramaAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
+    }
+
+    return mapAdminDramaMedia(updatedDrama);
   });
 }
 

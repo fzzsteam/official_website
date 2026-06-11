@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import { ok, fail } from '@/lib/api/response';
-import { requireAdminSession, assertApprovedOrganization } from '@/lib/admin-auth/require-admin';
+import { requireAdminRole } from '@/lib/admin-auth/require-admin';
 import { updateDramaReleaseStatus } from '@/lib/admin/drama-admin-service';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const adminUser = await requireAdminSession();
-    assertApprovedOrganization(adminUser);
+    const adminUser = await requireAdminRole();
     const drama = await updateDramaReleaseStatus(adminUser, params.id, await request.json());
     return ok({ drama });
   } catch (error) {

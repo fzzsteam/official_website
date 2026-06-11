@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ok, fail } from '@/lib/api/response';
+import { ok, fail, formatZodErrorMessage } from '@/lib/api/response';
+import { failFromPrismaDuplicateResource, isPrismaDuplicateError } from '@/lib/api/prisma-errors';
 import { requireAdminRole, isAdminAuthError } from '@/lib/admin-auth/require-admin';
 import { createOrganizationByAdmin, listOrganizations } from '@/lib/admin/organization-service';
 
@@ -20,7 +21,10 @@ export async function POST(request: Request) {
     const organization = await createOrganizationByAdmin(await request.json());
     return ok({ organization });
   } catch (error) {
-    if (error instanceof z.ZodError) return fail('INVALID_REQUEST', '请求参数错误', 400);
+    if (error instanceof z.ZodError) return fail('INVALID_REQUEST', formatZodErrorMessage(error), 400);
+    if (isPrismaDuplicateError(error)) {
+      return failFromPrismaDuplicateResource(error);
+    }
     return failFromAdminError(error, 'CREATE_ORGANIZATION_FAILED', '创建机构失败');
   }
 }

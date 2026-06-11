@@ -14,7 +14,10 @@ test('organization admin pages wire list, detail, and review APIs', () => {
   const detail = read('app/admin/organizations/[id]/page.tsx');
 
   assert.match(list, /\/api\/admin\/organizations/);
-  assert.match(list, /\/api\/admin\/organizations\/\$\{organizationId\}\/review/);
+  assert.match(list, /\/api\/admin\/organizations\/\$\{organization\.id\}\/review/);
+  assert.match(list, /\/api\/admin\/organizations\/\$\{organizationId\}\/reset-password/);
+  assert.match(list, /重置密码/);
+  assert.match(list, /密码已重置为手机号后 8 位/);
   assert.match(detail, /redirect\('\/admin\/organizations'\)/);
 });
 

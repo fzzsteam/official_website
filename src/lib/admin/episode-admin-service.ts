@@ -45,8 +45,16 @@ export async function assertDramaWritable(adminUser: CurrentAdminUser, dramaId: 
   return drama;
 }
 
+export async function assertDramaReadable(adminUser: CurrentAdminUser, dramaId: string) {
+  const drama = await prisma.drama.findFirst({ where: { id: dramaId, ...ownershipWhere(adminUser) } });
+  if (!drama) {
+    throw createEpisodeAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
+  }
+  return drama;
+}
+
 export async function listAdminEpisodes(adminUser: CurrentAdminUser, dramaId: string): Promise<AdminEpisodeMedia[]> {
-  await assertDramaWritable(adminUser, dramaId);
+  await assertDramaReadable(adminUser, dramaId);
   const rows = await prisma.episode.findMany({ where: { dramaId }, orderBy: { episodeNo: 'asc' } });
   return rows.map(mapAdminEpisodeMedia);
 }

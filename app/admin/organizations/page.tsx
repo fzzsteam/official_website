@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AdminActionButton } from '@/components/admin/AdminActionButton';
 import { AdminDrawer } from '@/components/admin/AdminDrawer';
+import { AdminLoadingState } from '@/components/admin/AdminLoadingState';
 import { AdminListToolbar } from '@/components/admin/AdminListToolbar';
-import { AdminMediaPreview } from '@/components/admin/AdminMediaPreview';
 import { AdminMediaUpload } from '@/components/admin/AdminMediaUpload';
+import { AdminMoreActions } from '@/components/admin/AdminMoreActions';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { adminApi } from '@/lib/admin-ui/api';
+import { showAdminToast } from '@/lib/admin-ui/toast';
 
 interface Organization {
   id: string;
@@ -52,21 +55,32 @@ const emptyOrganizationForm: OrganizationFormState = {
 
 export default function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [form, setForm] = useState<OrganizationFormState>(emptyOrganizationForm);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
-    const data = await adminApi<{ organizations: Organization[] }>('/api/admin/organizations');
-    setOrganizations(data.organizations);
+    setPageLoading(true);
+    try {
+      const data = await adminApi<{ organizations: Organization[] }>('/api/admin/organizations');
+      setOrganizations(data.organizations);
+    } finally {
+      setPageLoading(false);
+    }
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err instanceof Error ? err.message : '获取机构失败'));
+    load().catch(ignoreHandledError);
   }, []);
+
+  function ignoreHandledError() {
+    // adminApi 已通过全局 toast 展示错误，这里只阻止开发态未处理异常覆盖页面。
+  }
 
   const visibleOrganizations = organizations.filter((organization) => {
     const matchesSearch = organization.name.includes(search);
@@ -97,39 +111,70 @@ export default function AdminOrganizationsPage() {
     setDrawerOpen(true);
   }
 
-  async function saveOrganization() {
-    if (selectedOrganization) {
-      await adminApi(`/api/admin/organizations/${selectedOrganization.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          name: form.name,
-          contactName: form.contactName,
-          contactPhone: form.contactPhone,
-          email: form.email,
-          creditCode: form.creditCode,
-          address: form.address,
-          description: form.description,
-          businessLicensePath: form.businessLicensePath,
-        }),
-      });
-    } else {
-      await adminApi('/api/admin/organizations', {
-        method: 'POST',
-        body: JSON.stringify(form),
-      });
-    }
+  function updateForm<K extends keyof OrganizationFormState>(key: K, value: OrganizationFormState[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
 
-    setDrawerOpen(false);
-    await load();
+  async function saveOrganization() {
+    setSaving(true);
+
+    try {
+      if (selectedOrganization) {
+        await adminApi(`/api/admin/organizations/${selectedOrganization.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: form.name,
+            contactName: form.contactName,
+            contactPhone: form.contactPhone,
+            email: form.email,
+            creditCode: form.creditCode,
+            address: form.address,
+            description: form.description,
+            businessLicensePath: form.businessLicensePath,
+          }),
+        });
+      } else {
+        await adminApi('/api/admin/organizations', {
+          method: 'POST',
+          body: JSON.stringify(form),
+        });
+      }
+
+      showAdminToast({ type: 'success', message: selectedOrganization ? '机构已保存' : '机构已创建' });
+      setDrawerOpen(false);
+      await load();
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function reviewOrganization(organizationId: string, action: 'approve' | 'reject', reason?: string) {
-    await adminApi(`/api/admin/organizations/${organizationId}/review`, {
-      method: 'POST',
-      body: JSON.stringify({ action, reason }),
-    });
-    await load();
+    setActionBusy(true);
+    try {
+      await adminApi(`/api/admin/organizations/${organizationId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ action, reason }),
+      });
+      showAdminToast({ type: 'success', message: action === 'approve' ? '机构审核已通过' : '机构已驳回' });
+      await load();
+    } finally {
+      setActionBusy(false);
+    }
   }
+
+  async function resetPassword(organizationId: string) {
+    setActionBusy(true);
+    try {
+      await adminApi(`/api/admin/organizations/${organizationId}/reset-password`, {
+        method: 'POST',
+      });
+      showAdminToast({ type: 'success', message: '密码已重置为手机号后 8 位' });
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  const disableActions = pageLoading || saving || actionBusy;
 
   return (
     <div className="space-y-5">
@@ -161,9 +206,9 @@ export default function AdminOrganizationsPage() {
         ]}
       />
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {pageLoading ? <AdminLoadingState text="机构数据加载中..." /> : null}
 
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+      {!pageLoading ? <div className="overflow-visible rounded-md border border-slate-200 bg-white">
         {visibleOrganizations.map((organization) => (
           <div key={organization.id} className="grid gap-4 border-b border-slate-200 p-4 last:border-b-0 lg:grid-cols-[1fr_220px]">
             <div className="space-y-2">
@@ -176,23 +221,36 @@ export default function AdminOrganizationsPage() {
             </div>
             <div className="flex flex-wrap items-start justify-end gap-2">
               {/* Pending row actions call /api/admin/organizations/${organization.id}/review. */}
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => openEditDrawer(organization)}>
-                编辑
-              </button>
-              {organization.status === 'pending' ? (
-                <>
-                  <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void reviewOrganization(organization.id, 'approve')}>
-                    通过
-                  </button>
-                  <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void reviewOrganization(organization.id, 'reject', '资料待补充')}>
-                    驳回
-                  </button>
-                </>
-              ) : null}
+              <AdminActionButton disabled={disableActions} onClick={() => openEditDrawer(organization)}>
+                查看
+              </AdminActionButton>
+              <AdminMoreActions
+                disabled={disableActions}
+                actions={[
+                  ...(organization.status === 'pending'
+                    ? [
+                        {
+                          label: '通过',
+                          onClick: () => void reviewOrganization(organization.id, 'approve').catch(ignoreHandledError),
+                        },
+                        {
+                          label: '驳回',
+                          tone: 'danger' as const,
+                          onClick: () => void reviewOrganization(organization.id, 'reject', '资料待补充').catch(ignoreHandledError),
+                        },
+                      ]
+                    : []),
+                  {
+                    label: '重置密码',
+                    tone: 'danger',
+                    onClick: () => void resetPassword(organization.id).catch(ignoreHandledError),
+                  },
+                ]}
+              />
             </div>
           </div>
         ))}
-      </div>
+      </div> : null}
 
       <AdminDrawer
         open={drawerOpen}
@@ -204,8 +262,8 @@ export default function AdminOrganizationsPage() {
             <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => setDrawerOpen(false)}>
               取消
             </button>
-            <button className="rounded-md bg-brand-gold px-3 py-2 text-sm text-stone-950" type="button" onClick={() => void saveOrganization()}>
-              保存
+            <button className="rounded-md bg-brand-gold px-3 py-2 text-sm text-stone-950 disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="button" onClick={() => void saveOrganization().catch(ignoreHandledError)}>
+              {saving ? '保存中...' : '保存'}
             </button>
           </div>
         }
@@ -213,37 +271,63 @@ export default function AdminOrganizationsPage() {
         <div className="space-y-4">
           <label className="block space-y-2">
             <span className="text-sm text-slate-600">机构名称</span>
-            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.name} onChange={(event) => updateForm('name', event.target.value)} />
           </label>
           <label className="block space-y-2">
             <span className="text-sm text-slate-600">联系人</span>
-            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.contactName} onChange={(event) => setForm({ ...form, contactName: event.target.value })} />
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.contactName} onChange={(event) => updateForm('contactName', event.target.value)} />
           </label>
           <label className="block space-y-2">
             <span className="text-sm text-slate-600">手机号</span>
-            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} />
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.contactPhone} onChange={(event) => updateForm('contactPhone', event.target.value.replace(/\D/g, '').slice(0, 11))} />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-slate-600">统一社会信用代码</span>
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.creditCode} onChange={(event) => updateForm('creditCode', event.target.value)} />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-slate-600">邮箱</span>
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-slate-600">联系地址</span>
+            <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.address} onChange={(event) => updateForm('address', event.target.value)} />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-slate-600">机构描述</span>
+            <textarea className="min-h-[96px] w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={form.description} onChange={(event) => updateForm('description', event.target.value)} />
           </label>
           {!selectedOrganization ? (
             <>
               <label className="block space-y-2">
                 <span className="text-sm text-slate-600">初始密码</span>
-                <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
+                <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" type="password" value={form.password} onChange={(event) => updateForm('password', event.target.value)} />
+                <p className="text-xs text-slate-400">密码至少 8 位。</p>
               </label>
               <div className="space-y-2">
                 <span className="text-sm text-slate-600">账号状态</span>
                 <div className="flex gap-2">
-                  <button className={`rounded-md border px-3 py-2 text-sm ${form.initialStatus === 'approved' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-slate-300 text-slate-700'}`} type="button" onClick={() => setForm({ ...form, initialStatus: 'approved' })}>
+                  <button className={`rounded-md border px-3 py-2 text-sm ${form.initialStatus === 'approved' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-slate-300 text-slate-700'}`} type="button" onClick={() => updateForm('initialStatus', 'approved')}>
                     直接启用
                   </button>
-                  <button className={`rounded-md border px-3 py-2 text-sm ${form.initialStatus === 'pending' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-slate-300 text-slate-700'}`} type="button" onClick={() => setForm({ ...form, initialStatus: 'pending' })}>
+                  <button className={`rounded-md border px-3 py-2 text-sm ${form.initialStatus === 'pending' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-slate-300 text-slate-700'}`} type="button" onClick={() => updateForm('initialStatus', 'pending')}>
                     待审核
                   </button>
                 </div>
               </div>
             </>
           ) : null}
-          <AdminMediaPreview type="file" url={selectedOrganization?.businessLicenseUrl || null} label="营业执照预览" />
-          <AdminMediaUpload fileKind="license" mediaKind="file" value={form.businessLicensePath} onChange={(path) => setForm({ ...form, businessLicensePath: path })} onClear={() => setForm({ ...form, businessLicensePath: '' })} />
+          <AdminMediaUpload
+            fileKind="license"
+            mediaKind="image"
+            previewSize="document"
+            label="营业执照"
+            emptyLabel="上传营业执照"
+            value={form.businessLicensePath}
+            previewUrl={selectedOrganization?.businessLicensePath === form.businessLicensePath ? selectedOrganization.businessLicenseUrl : null}
+            onChange={(path) => updateForm('businessLicensePath', path)}
+            onClear={() => updateForm('businessLicensePath', '')}
+          />
         </div>
       </AdminDrawer>
     </div>

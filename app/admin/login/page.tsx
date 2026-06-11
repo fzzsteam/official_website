@@ -8,19 +8,17 @@ import { FormField, adminInputClassName } from '@/components/admin/FormField';
 export default function AdminLoginPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError('');
     try {
       await adminApi('/api/admin/auth/login', {
         method: 'POST',
         body: JSON.stringify({ phone, password }),
       });
       window.location.href = '/admin';
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败');
+    } catch {
+      // adminApi 已通过全局 toast 展示错误。
     }
   }
 
@@ -34,7 +32,6 @@ export default function AdminLoginPage() {
         <FormField label="密码">
           <input className={adminInputClassName} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         </FormField>
-        {error ? <p className="text-sm text-red-300">{error}</p> : null}
         <button className="w-full rounded-md bg-brand-gold px-4 py-2 text-sm font-medium text-stone-950" type="submit">
           登录
         </button>

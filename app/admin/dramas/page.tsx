@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { AdminActionButton } from '@/components/admin/AdminActionButton';
 import { AdminDrawer } from '@/components/admin/AdminDrawer';
+import { AdminLoadingState } from '@/components/admin/AdminLoadingState';
 import { AdminListToolbar } from '@/components/admin/AdminListToolbar';
-import { AdminMediaPreview } from '@/components/admin/AdminMediaPreview';
 import { AdminMediaUpload } from '@/components/admin/AdminMediaUpload';
+import { AdminMoreActions } from '@/components/admin/AdminMoreActions';
 import { GenreMultiSelect } from '@/components/admin/GenreMultiSelect';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { adminApi } from '@/lib/admin-ui/api';
+import { showAdminToast } from '@/lib/admin-ui/toast';
 
 interface AdminDrama {
   id: string;
@@ -25,6 +28,11 @@ interface AdminDrama {
   updatedAt: string;
   genres?: Array<{ genreCode: string; genreName: string }>;
   _count?: { episodes: number };
+}
+
+interface CurrentAdminUser {
+  role: 'admin' | 'organization';
+  displayName: string;
 }
 
 interface DramaFormState {
@@ -51,22 +59,38 @@ const emptyForm: DramaFormState = {
 
 export default function AdminDramasPage() {
   const [dramas, setDramas] = useState<AdminDrama[]>([]);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [releaseFilter, setReleaseFilter] = useState('all');
   const [reviewFilter, setReviewFilter] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDrama, setSelectedDrama] = useState<AdminDrama | null>(null);
   const [form, setForm] = useState<DramaFormState>(emptyForm);
+  const [currentUser, setCurrentUser] = useState<CurrentAdminUser | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
-    const data = await adminApi<{ dramas: AdminDrama[] }>('/api/admin/dramas');
-    setDramas(data.dramas);
+    setPageLoading(true);
+    try {
+      const [dramaData, authData] = await Promise.all([
+        adminApi<{ dramas: AdminDrama[] }>('/api/admin/dramas'),
+        adminApi<{ user: CurrentAdminUser }>('/api/admin/auth/me'),
+      ]);
+      setDramas(dramaData.dramas);
+      setCurrentUser(authData.user);
+    } finally {
+      setPageLoading(false);
+    }
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err instanceof Error ? err.message : '获取剧集失败'));
+    load().catch(ignoreHandledError);
   }, []);
+
+  function ignoreHandledError() {
+    // adminApi 已通过全局 toast 展示错误，这里只阻止开发态未处理异常覆盖页面。
+  }
 
   const visibleDramas = dramas.filter((drama) => {
     const matchesSearch = drama.title.includes(search);
@@ -97,46 +121,74 @@ export default function AdminDramasPage() {
   }
 
   async function submitForReview(dramaId: string) {
-    await adminApi(`/api/admin/dramas/${dramaId}/submit`, { method: 'POST', body: '{}' });
-    await load();
+    setActionBusy(true);
+    try {
+      await adminApi(`/api/admin/dramas/${dramaId}/submit`, { method: 'POST', body: '{}' });
+      showAdminToast({ type: 'success', message: '已提交审核' });
+      await load();
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function reviewDrama(dramaId: string, action: 'approve' | 'reject', reason?: string) {
-    await adminApi(`/api/admin/dramas/${dramaId}/review`, {
-      method: 'POST',
-      body: JSON.stringify({ action, reason }),
-    });
-    await load();
+    setActionBusy(true);
+    try {
+      await adminApi(`/api/admin/dramas/${dramaId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ action, reason }),
+      });
+      showAdminToast({ type: 'success', message: action === 'approve' ? '审核已通过' : '已驳回' });
+      await load();
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function updateRelease(dramaId: string, releaseStatus: 'upcoming' | 'released') {
-    await adminApi(`/api/admin/dramas/${dramaId}/release`, {
-      method: 'POST',
-      body: JSON.stringify({ releaseStatus }),
-    });
-    await load();
+    setActionBusy(true);
+    try {
+      await adminApi(`/api/admin/dramas/${dramaId}/release`, {
+        method: 'POST',
+        body: JSON.stringify({ releaseStatus }),
+      });
+      showAdminToast({ type: 'success', message: releaseStatus === 'released' ? '已上架' : '已下架' });
+      await load();
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function saveDrama() {
-    if (selectedDrama) {
-      await adminApi(`/api/admin/dramas/${selectedDrama.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(form),
-      });
-      await adminApi(`/api/admin/dramas/${selectedDrama.id}/release`, {
-        method: 'POST',
-        body: JSON.stringify({ releaseStatus: form.releaseStatus }),
-      });
-    } else {
-      await adminApi('/api/admin/dramas', {
-        method: 'POST',
-        body: JSON.stringify(form),
-      });
-    }
+    setSaving(true);
+    try {
+      if (selectedDrama) {
+        await adminApi(`/api/admin/dramas/${selectedDrama.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(form),
+        });
+        await adminApi(`/api/admin/dramas/${selectedDrama.id}/release`, {
+          method: 'POST',
+          body: JSON.stringify({ releaseStatus: form.releaseStatus }),
+        });
+      } else {
+        await adminApi('/api/admin/dramas', {
+          method: 'POST',
+          body: JSON.stringify(form),
+        });
+      }
 
-    setDrawerOpen(false);
-    await load();
+      showAdminToast({ type: 'success', message: selectedDrama ? '剧集已保存' : '剧集已创建' });
+      setDrawerOpen(false);
+      await load();
+    } finally {
+      setSaving(false);
+    }
   }
+
+  const isOrganizationUser = currentUser?.role === 'organization';
+  const isAdminUser = currentUser?.role === 'admin';
+  const disableActions = pageLoading || saving || actionBusy;
 
   return (
     <div className="space-y-5">
@@ -180,13 +232,13 @@ export default function AdminDramasPage() {
         action={<Link href="/admin/dramas" className="text-sm text-slate-500">刷新</Link>}
       />
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {pageLoading ? <AdminLoadingState text="剧集数据加载中..." /> : null}
 
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+      {!pageLoading ? <div className="overflow-visible rounded-md border border-slate-200 bg-white">
         {visibleDramas.map((drama) => (
-          <div key={drama.id} className="grid gap-4 border-b border-slate-200 p-4 last:border-b-0 lg:grid-cols-[120px_1fr_240px]">
-            <div className="overflow-hidden rounded-md bg-slate-100">
-              {drama.posterUrl ? <img src={drama.posterUrl} alt={drama.title} className="h-28 w-full object-cover" /> : <div className="flex h-28 items-center justify-center text-xs text-slate-400">无海报</div>}
+          <div key={drama.id} className="grid gap-4 border-b border-slate-200 p-4 last:border-b-0 lg:grid-cols-[112px_1fr_240px]">
+            <div className="aspect-[9/16] overflow-hidden rounded-md bg-slate-100">
+              {drama.coverUrl ? <img src={drama.coverUrl} alt={drama.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs text-slate-400">无封面</div>}
             </div>
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -206,28 +258,47 @@ export default function AdminDramasPage() {
             </div>
             <div className="flex flex-wrap items-start justify-end gap-2">
               {/* Row actions call /api/admin/dramas/${drama.id}/review and /api/admin/dramas/${drama.id}/release. */}
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => openEditDrawer(drama)}>
-                编辑
-              </button>
+              <AdminActionButton disabled={disableActions} onClick={() => openEditDrawer(drama)}>
+                查看
+              </AdminActionButton>
               <Link className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" href={`/admin/dramas/${drama.id}/episodes`}>
                 分集
               </Link>
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void submitForReview(drama.id)}>
-                提交审核
-              </button>
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void reviewDrama(drama.id, 'approve')}>
-                审核通过
-              </button>
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void reviewDrama(drama.id, 'reject', '资料不完整')}>
-                驳回
-              </button>
-              <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => void updateRelease(drama.id, drama.releaseStatus === 'released' ? 'upcoming' : 'released')}>
-                {drama.releaseStatus === 'released' ? '下架' : '上架'}
-              </button>
+              <AdminMoreActions
+                disabled={disableActions}
+                actions={[
+                  ...(isOrganizationUser && (drama.reviewStatus === 'draft' || drama.reviewStatus === 'rejected')
+                    ? [{
+                        label: '提交审核',
+                        onClick: () => void submitForReview(drama.id).catch(ignoreHandledError),
+                      }]
+                    : []),
+                  ...(isAdminUser && drama.reviewStatus === 'submitted'
+                    ? [
+                        {
+                          label: '审核通过',
+                          onClick: () => void reviewDrama(drama.id, 'approve').catch(ignoreHandledError),
+                        },
+                        {
+                          label: '驳回',
+                          tone: 'danger' as const,
+                          onClick: () => void reviewDrama(drama.id, 'reject', '资料不完整').catch(ignoreHandledError),
+                        },
+                      ]
+                    : []),
+                  ...(isAdminUser
+                    ? [{
+                        label: drama.releaseStatus === 'released' ? '下架' : '上架',
+                        disabled: drama.reviewStatus !== 'approved',
+                        onClick: () => void updateRelease(drama.id, drama.releaseStatus === 'released' ? 'upcoming' : 'released').catch(ignoreHandledError),
+                      }]
+                    : []),
+                ]}
+              />
             </div>
           </div>
         ))}
-      </div>
+      </div> : null}
 
       <AdminDrawer
         open={drawerOpen}
@@ -239,8 +310,8 @@ export default function AdminDramasPage() {
             <button className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700" type="button" onClick={() => setDrawerOpen(false)}>
               取消
             </button>
-            <button className="rounded-md bg-brand-gold px-3 py-2 text-sm text-stone-950" type="button" onClick={() => void saveDrama()}>
-              保存
+            <button className="rounded-md bg-brand-gold px-3 py-2 text-sm text-stone-950 disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="button" onClick={() => void saveDrama().catch(ignoreHandledError)}>
+              {saving ? '保存中...' : '保存'}
             </button>
           </div>
         }
@@ -258,9 +329,28 @@ export default function AdminDramasPage() {
             <span className="text-sm text-slate-600">简介</span>
             <textarea className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" rows={4} value={form.synopsis} onChange={(event) => setForm({ ...form, synopsis: event.target.value })} />
           </label>
-          <AdminMediaPreview type="image" url={selectedDrama?.posterUrl || null} label="海报预览" />
-          <AdminMediaUpload fileKind="cover" mediaKind="image" value={form.coverPath} onChange={(path) => setForm({ ...form, coverPath: path })} onClear={() => setForm({ ...form, coverPath: '' })} />
-          <AdminMediaUpload fileKind="poster" mediaKind="image" value={form.posterPath} onChange={(path) => setForm({ ...form, posterPath: path })} onClear={() => setForm({ ...form, posterPath: '' })} />
+          <AdminMediaUpload
+            fileKind="cover"
+            mediaKind="image"
+            previewSize="portrait"
+            label="封面图"
+            emptyLabel="上传封面图"
+            value={form.coverPath}
+            previewUrl={selectedDrama?.coverPath === form.coverPath ? selectedDrama.coverUrl : null}
+            onChange={(path) => setForm({ ...form, coverPath: path })}
+            onClear={() => setForm({ ...form, coverPath: '' })}
+          />
+          <AdminMediaUpload
+            fileKind="poster"
+            mediaKind="image"
+            previewSize="landscape"
+            label="海报"
+            emptyLabel="上传海报"
+            value={form.posterPath}
+            previewUrl={selectedDrama?.posterPath === form.posterPath ? selectedDrama.posterUrl : null}
+            onChange={(path) => setForm({ ...form, posterPath: path })}
+            onClear={() => setForm({ ...form, posterPath: '' })}
+          />
           <GenreMultiSelect value={form.genreCodes} onChange={(genreCodes) => setForm({ ...form, genreCodes })} />
         </div>
       </AdminDrawer>

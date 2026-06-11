@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { hashAdminPassword } from '@/lib/admin-auth/password';
 import { mapAdminOrganizationMedia } from '@/lib/admin/media-url';
+import { assertRegistrationUploadPath } from '@/lib/admin-upload/upload-service';
 
 type AdminOrganizationMedia = {
   [key: string]: unknown;
@@ -12,18 +13,18 @@ type AdminOrganizationMedia = {
 };
 
 export const organizationInputSchema = z.object({
-  name: z.string().min(1).max(150),
-  contactName: z.string().min(1).max(100),
-  contactPhone: z.string().min(1).max(32),
-  email: z.string().email().optional().or(z.literal('')),
-  creditCode: z.string().min(1).max(64),
-  address: z.string().max(255).optional().or(z.literal('')),
-  description: z.string().max(5000).optional().or(z.literal('')),
-  businessLicensePath: z.string().min(1).max(255),
+  name: z.string().trim().min(1, '机构名称不能为空').max(150, '机构名称不能超过 150 个字符'),
+  contactName: z.string().trim().min(1, '联系人不能为空').max(100, '联系人不能超过 100 个字符'),
+  contactPhone: z.string().trim().min(1, '手机号不能为空').regex(/^1\d{10}$/, '请输入 11 位手机号'),
+  email: z.string().trim().email('请输入正确的邮箱地址').optional().or(z.literal('')),
+  creditCode: z.string().trim().min(1, '统一社会信用代码不能为空').max(64, '统一社会信用代码不能超过 64 个字符'),
+  address: z.string().trim().max(255, '联系地址不能超过 255 个字符').optional().or(z.literal('')),
+  description: z.string().trim().max(5000, '机构描述不能超过 5000 个字符').optional().or(z.literal('')),
+  businessLicensePath: z.string().trim().min(1, '请上传营业执照').max(255, '营业执照路径不能超过 255 个字符'),
 });
 
 export const organizationRegisterSchema = organizationInputSchema.extend({
-  password: z.string().min(8).max(100),
+  password: z.string().min(8, '初始密码至少 8 位').max(100, '初始密码不能超过 100 个字符'),
 });
 
 export const organizationAdminCreateSchema = organizationRegisterSchema.extend({
@@ -77,6 +78,7 @@ export async function registerOrganization(
   input: z.infer<typeof organizationRegisterSchema>,
 ): Promise<AdminOrganizationMedia> {
   const data = organizationRegisterSchema.parse(input);
+  const businessLicensePath = assertRegistrationUploadPath(data.businessLicensePath);
   const organizationId = randomUUID();
   const accountId = randomUUID();
   const passwordHash = await hashAdminPassword(data.password);
@@ -92,7 +94,7 @@ export async function registerOrganization(
         creditCode: data.creditCode,
         address: normalizeOptional(data.address),
         description: normalizeOptional(data.description),
-        businessLicensePath: data.businessLicensePath,
+        businessLicensePath,
         status: 'pending',
       },
     });
@@ -189,6 +191,28 @@ export async function updateOrganizationByAdmin(
   });
 
   return mapAdminOrganizationMedia(mapOrganization(organization));
+}
+
+export async function resetOrganizationPassword(id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: { id },
+    select: { contactPhone: true },
+  });
+
+  if (!organization) {
+    throw new Error('ORGANIZATION_NOT_FOUND');
+  }
+
+  const defaultPassword = organization.contactPhone.replace(/\D/g, '').slice(-8);
+  if (defaultPassword.length !== 8) {
+    throw new Error('INVALID_ORGANIZATION_PHONE');
+  }
+
+  const passwordHash = await hashAdminPassword(defaultPassword);
+  await prisma.adminUser.updateMany({
+    where: { organizationId: id, role: 'organization' },
+    data: { passwordHash },
+  });
 }
 
 export async function reviewOrganization(

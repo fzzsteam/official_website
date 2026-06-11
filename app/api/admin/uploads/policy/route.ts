@@ -1,19 +1,32 @@
 import { z } from 'zod';
 import { ok, fail } from '@/lib/api/response';
-import { requireAdminSession, assertApprovedOrganization, isAdminAuthError } from '@/lib/admin-auth/require-admin';
-import { createUploadPolicy } from '@/lib/admin-upload/upload-service';
+import { createAdminAuthError, assertApprovedOrganization, isAdminAuthError } from '@/lib/admin-auth/require-admin';
+import { getCurrentAdminUser } from '@/lib/admin-auth/service';
+import { createRegistrationUploadPolicy, createUploadPolicy } from '@/lib/admin-upload/upload-service';
 
 export const dynamic = 'force-dynamic';
 
 const policySchema = z.object({
   fileKind: z.enum(['license', 'cover', 'poster', 'trailer', 'episode', 'cast']),
+  uploadScope: z.enum(['admin', 'registration']).optional().default('admin'),
 });
 
 export async function POST(request: Request) {
   try {
-    const adminUser = await requireAdminSession();
-    assertApprovedOrganization(adminUser);
     const input = policySchema.parse(await request.json());
+
+    if (input.uploadScope === 'registration') {
+      if (input.fileKind === 'license') {
+        return ok({ upload: createRegistrationUploadPolicy(input.fileKind) });
+      }
+      throw createAdminAuthError('ADMIN_AUTH_REQUIRED', '请先登录后台', 401);
+    }
+
+    const adminUser = await getCurrentAdminUser();
+
+    if (!adminUser) throw createAdminAuthError('ADMIN_AUTH_REQUIRED', '请先登录后台', 401);
+
+    assertApprovedOrganization(adminUser);
     return ok({ upload: createUploadPolicy(adminUser, input.fileKind) });
   } catch (error) {
     if (error instanceof z.ZodError) return fail('INVALID_REQUEST', '请求参数错误', 400);

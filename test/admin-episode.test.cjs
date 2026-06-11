@@ -16,6 +16,9 @@ test('episode admin service checks drama ownership and upload paths', () => {
   assert.match(source, /upsertAdminEpisode/);
   assert.match(source, /deleteAdminEpisode/);
   assert.match(source, /assertAllowedUploadPath/);
+  assert.match(source, /assertDramaReadable/);
+  assert.match(source, /listAdminEpisodes[\s\S]*assertDramaReadable/);
+  assert.doesNotMatch(source, /listAdminEpisodes[\s\S]{0,180}assertDramaWritable/);
   assert.match(source, /assertDramaWritable/);
 });
 

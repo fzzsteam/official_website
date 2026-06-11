@@ -45,6 +45,14 @@ const Footer: React.FC<FooterProps> = ({ className }) => (
     >
       隐私政策
     </a>
+    <Dot />
+    <a
+      href="/admin/register"
+      style={textStyle}
+      className="hover:opacity-80 transition-opacity"
+    >
+      机构入驻
+    </a>
   </footer>
 );
 
