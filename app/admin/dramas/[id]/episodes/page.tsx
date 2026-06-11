@@ -24,14 +24,24 @@ interface AdminEpisode {
   updatedAt: string;
 }
 
-const emptyEpisodeForm = {
+interface EpisodeFormState {
+  episodeNo: number;
+  title: string;
+  summary: string;
+  videoPath: string;
+  coverPath: string;
+  durationSeconds: number;
+  status: 'draft' | 'published';
+}
+
+const emptyEpisodeForm: EpisodeFormState = {
   episodeNo: 1,
   title: '',
   summary: '',
   videoPath: '',
   coverPath: '',
   durationSeconds: 0,
-  status: 'draft' as const,
+  status: 'draft',
 };
 
 export default function AdminDramaEpisodesPage() {
@@ -43,7 +53,7 @@ export default function AdminDramaEpisodesPage() {
   const [error, setError] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState<AdminEpisode | null>(null);
-  const [form, setForm] = useState(emptyEpisodeForm);
+  const [form, setForm] = useState<EpisodeFormState>(emptyEpisodeForm);
 
   async function load() {
     const data = await adminApi<{ episodes: AdminEpisode[] }>(`/api/admin/dramas/${id}/episodes`);

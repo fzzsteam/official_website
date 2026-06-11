@@ -24,7 +24,20 @@ interface Organization {
   updatedAt: string;
 }
 
-const emptyOrganizationForm = {
+interface OrganizationFormState {
+  name: string;
+  contactName: string;
+  contactPhone: string;
+  email: string;
+  creditCode: string;
+  address: string;
+  description: string;
+  businessLicensePath: string;
+  password: string;
+  initialStatus: 'approved' | 'pending';
+}
+
+const emptyOrganizationForm: OrganizationFormState = {
   name: '',
   contactName: '',
   contactPhone: '',
@@ -34,7 +47,7 @@ const emptyOrganizationForm = {
   description: '',
   businessLicensePath: '',
   password: '',
-  initialStatus: 'approved' as 'approved' | 'pending',
+  initialStatus: 'approved',
 };
 
 export default function AdminOrganizationsPage() {
@@ -44,7 +57,7 @@ export default function AdminOrganizationsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
-  const [form, setForm] = useState(emptyOrganizationForm);
+  const [form, setForm] = useState<OrganizationFormState>(emptyOrganizationForm);
 
   async function load() {
     const data = await adminApi<{ organizations: Organization[] }>('/api/admin/organizations');

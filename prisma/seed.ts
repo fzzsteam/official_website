@@ -36,7 +36,7 @@ async function main() {
   const defaultAdminPasswordHash = await hashAdminPassword(defaultAdminPassword);
 
   await prisma.adminUser.upsert({
-    where: { phone: defaultAdminPhone },
+    where: { id: DEFAULT_ADMIN_ID },
     create: {
       id: DEFAULT_ADMIN_ID,
       phone: defaultAdminPhone,

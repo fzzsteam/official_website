@@ -14,8 +14,8 @@ test('organization admin pages wire list, detail, and review APIs', () => {
   const detail = read('app/admin/organizations/[id]/page.tsx');
 
   assert.match(list, /\/api\/admin\/organizations/);
-  assert.match(detail, /\/api\/admin\/organizations\/\$\{id\}/);
-  assert.match(detail, /\/review/);
+  assert.match(list, /\/api\/admin\/organizations\/\$\{organizationId\}\/review/);
+  assert.match(detail, /redirect\('\/admin\/organizations'\)/);
 });
 
 test('drama admin pages wire CRUD, submit, review, and episodes APIs', () => {
@@ -24,7 +24,8 @@ test('drama admin pages wire CRUD, submit, review, and episodes APIs', () => {
   const episodes = read('app/admin/dramas/[id]/episodes/page.tsx');
 
   assert.match(list, /\/api\/admin\/dramas/);
-  assert.match(edit, /\/submit/);
-  assert.match(edit, /\/review/);
+  assert.match(list, /\/submit/);
+  assert.match(list, /\/review/);
+  assert.match(edit, /redirect\('\/admin\/dramas'\)/);
   assert.match(episodes, /\/episodes/);
 });

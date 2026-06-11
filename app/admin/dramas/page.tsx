@@ -27,15 +27,26 @@ interface AdminDrama {
   _count?: { episodes: number };
 }
 
-const emptyForm = {
+interface DramaFormState {
+  title: string;
+  subtitle: string;
+  synopsis: string;
+  coverPath: string;
+  posterPath: string;
+  releaseStatus: 'upcoming' | 'released';
+  sortOrder: number;
+  genreCodes: string[];
+}
+
+const emptyForm: DramaFormState = {
   title: '',
   subtitle: '',
   synopsis: '',
   coverPath: '',
   posterPath: '',
-  releaseStatus: 'upcoming' as const,
+  releaseStatus: 'upcoming',
   sortOrder: 0,
-  genreCodes: [] as string[],
+  genreCodes: [],
 };
 
 export default function AdminDramasPage() {
@@ -46,7 +57,7 @@ export default function AdminDramasPage() {
   const [reviewFilter, setReviewFilter] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDrama, setSelectedDrama] = useState<AdminDrama | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<DramaFormState>(emptyForm);
 
   async function load() {
     const data = await adminApi<{ dramas: AdminDrama[] }>('/api/admin/dramas');

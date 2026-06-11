@@ -1,6 +1,15 @@
 'use client';
 
-import { DRAMA_GENRES } from '@/lib/admin/drama-genres';
+const DRAMA_GENRE_OPTIONS = [
+  { code: 'urban', name: '都市' },
+  { code: 'romance', name: '爱情' },
+  { code: 'suspense', name: '悬疑' },
+  { code: 'costume', name: '古装' },
+  { code: 'comedy', name: '喜剧' },
+  { code: 'xianxia', name: '仙侠' },
+  { code: 'war', name: '战争' },
+  { code: 'thriller', name: '惊悚' },
+];
 
 interface GenreMultiSelectProps {
   value: string[];
@@ -19,7 +28,7 @@ export function GenreMultiSelect({ value, onChange }: GenreMultiSelectProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {DRAMA_GENRES.map((genre) => {
+      {DRAMA_GENRE_OPTIONS.map((genre) => {
         const selected = value.includes(genre.code);
         return (
           <button
