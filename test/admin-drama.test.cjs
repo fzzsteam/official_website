@@ -62,3 +62,15 @@ test('drama admin service auto-generates slug and persists fixed genres', () => 
   assert.match(drama, /replaceDramaGenres/);
   assert.doesNotMatch(drama, /slug:\s*z\.string\(\)\.min\(1\)/);
 });
+
+test('drama release API updates release status separately from detail save', () => {
+  const route = read('app/api/admin/dramas/[id]/release/route.ts');
+  const service = read('src/lib/admin/drama-admin-service.ts');
+
+  assert.match(route, /requireAdminSession/);
+  assert.match(route, /assertApprovedOrganization/);
+  assert.match(route, /updateDramaReleaseStatus/);
+  assert.match(service, /updateDramaReleaseStatus/);
+  assert.match(service, /reviewStatus !== 'approved'/);
+  assert.match(service, /releaseStatus:\s*data\.releaseStatus/);
+});

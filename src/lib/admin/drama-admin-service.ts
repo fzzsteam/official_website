@@ -30,6 +30,10 @@ export const dramaReviewSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
+export const dramaReleaseSchema = z.object({
+  releaseStatus: z.enum(['upcoming', 'released']),
+});
+
 function nullable(value: string | undefined) {
   return value && value.trim() ? value.trim() : null;
 }
@@ -222,6 +226,37 @@ export async function reviewDrama(
   });
 
   return mapAdminDramaMedia(drama);
+}
+
+export async function updateDramaReleaseStatus(
+  adminUser: CurrentAdminUser,
+  dramaId: string,
+  input: z.infer<typeof dramaReleaseSchema>,
+): Promise<AdminDramaMedia> {
+  const data = dramaReleaseSchema.parse(input);
+  const drama = await prisma.drama.findFirst({
+    where: { id: dramaId, ...getDramaOwnershipWhere(adminUser) },
+    include: { _count: { select: { episodes: true } }, organization: true, genres: true },
+  });
+
+  if (!drama) {
+    throw createDramaAdminError('DRAMA_NOT_FOUND', '剧集不存在', 404);
+  }
+
+  if (drama.reviewStatus !== 'approved') {
+    throw createDramaAdminError('DRAMA_NOT_APPROVED', '审核通过后才可以上架', 409);
+  }
+
+  const updatedDrama = await prisma.drama.update({
+    where: { id: dramaId },
+    data: {
+      releaseStatus: data.releaseStatus,
+      publishedAt: data.releaseStatus === 'released' ? (drama.publishedAt || new Date()) : null,
+    },
+    include: { _count: { select: { episodes: true } }, organization: true, genres: true },
+  });
+
+  return mapAdminDramaMedia(updatedDrama);
 }
 
 function createDramaAdminError(code: string, message: string, status: number) {
