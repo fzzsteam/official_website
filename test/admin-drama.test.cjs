@@ -48,3 +48,17 @@ test('admin drama service maps media paths to signed admin URLs', () => {
   assert.match(drama, /coverUrl/);
   assert.doesNotMatch(drama, /trailerUrl/);
 });
+
+test('drama admin service auto-generates slug and persists fixed genres', () => {
+  const genres = read('src/lib/admin/drama-genres.ts');
+  const drama = read('src/lib/admin/drama-admin-service.ts');
+
+  assert.match(genres, /DRAMA_GENRES/);
+  assert.match(genres, /urban/);
+  assert.match(genres, /romance/);
+  assert.match(genres, /validateDramaGenreCodes/);
+  assert.match(genres, /replaceDramaGenres/);
+  assert.match(drama, /generateUniqueDramaSlug/);
+  assert.match(drama, /replaceDramaGenres/);
+  assert.doesNotMatch(drama, /slug:\s*z\.string\(\)\.min\(1\)/);
+});
