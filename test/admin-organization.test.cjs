@@ -43,3 +43,23 @@ test('organization service returns signed business license URL', () => {
   assert.match(organization, /businessLicenseUrl/);
   assert.match(organization, /mapAdminOrganizationMedia/);
 });
+
+test('admin organization creation supports approved or pending initial status', () => {
+  const service = read('src/lib/admin/organization-service.ts');
+  const route = read('app/api/admin/organizations/route.ts');
+
+  assert.match(service, /initialStatus/);
+  assert.match(service, /z\.enum\(\['approved', 'pending'\]\)/);
+  assert.match(service, /status:\s*data\.initialStatus/);
+  assert.match(service, /data\.initialStatus === 'approved' \? 'active' : 'pending'/);
+  assert.match(route, /createOrganizationByAdmin/);
+});
+
+test('admin organization detail route supports updating organization details', () => {
+  const route = read('app/api/admin/organizations/[id]/route.ts');
+  const service = read('src/lib/admin/organization-service.ts');
+
+  assert.match(route, /export async function PUT/);
+  assert.match(route, /updateOrganizationByAdmin/);
+  assert.match(service, /updateOrganizationByAdmin/);
+});

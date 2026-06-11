@@ -7,6 +7,7 @@ import { hashAdminPassword } from '@/lib/admin-auth/password';
 import { mapAdminOrganizationMedia } from '@/lib/admin/media-url';
 
 type AdminOrganizationMedia = {
+  [key: string]: unknown;
   businessLicenseUrl: string | null;
 };
 
@@ -23,6 +24,10 @@ export const organizationInputSchema = z.object({
 
 export const organizationRegisterSchema = organizationInputSchema.extend({
   password: z.string().min(8).max(100),
+});
+
+export const organizationAdminCreateSchema = organizationRegisterSchema.extend({
+  initialStatus: z.enum(['approved', 'pending']).default('approved'),
 });
 
 export const organizationReviewSchema = z.object({
@@ -111,9 +116,9 @@ export async function registerOrganization(
 }
 
 export async function createOrganizationByAdmin(
-  input: z.infer<typeof organizationRegisterSchema>,
+  input: z.infer<typeof organizationAdminCreateSchema>,
 ): Promise<AdminOrganizationMedia> {
-  const data = organizationRegisterSchema.parse(input);
+  const data = organizationAdminCreateSchema.parse(input);
   const organizationId = randomUUID();
   const passwordHash = await hashAdminPassword(data.password);
 
@@ -129,8 +134,8 @@ export async function createOrganizationByAdmin(
         address: normalizeOptional(data.address),
         description: normalizeOptional(data.description),
         businessLicensePath: data.businessLicensePath,
-        status: 'approved',
-        reviewedAt: new Date(),
+        status: data.initialStatus,
+        reviewedAt: data.initialStatus === 'approved' ? new Date() : null,
       },
     });
 
@@ -142,7 +147,7 @@ export async function createOrganizationByAdmin(
         role: 'organization',
         displayName: data.name,
         organizationId,
-        status: 'active',
+        status: data.initialStatus === 'approved' ? 'active' : 'pending',
       },
     });
 
@@ -162,6 +167,28 @@ export async function listOrganizations(): Promise<AdminOrganizationMedia[]> {
 export async function getOrganizationById(id: string): Promise<AdminOrganizationMedia | null> {
   const row = await prisma.organization.findUnique({ where: { id } });
   return row ? mapAdminOrganizationMedia(mapOrganization(row)) : null;
+}
+
+export async function updateOrganizationByAdmin(
+  id: string,
+  input: z.infer<typeof organizationInputSchema>,
+): Promise<AdminOrganizationMedia> {
+  const data = organizationInputSchema.parse(input);
+  const organization = await prisma.organization.update({
+    where: { id },
+    data: {
+      name: data.name,
+      contactName: data.contactName,
+      contactPhone: data.contactPhone,
+      email: normalizeOptional(data.email),
+      creditCode: data.creditCode,
+      address: normalizeOptional(data.address),
+      description: normalizeOptional(data.description),
+      businessLicensePath: data.businessLicensePath,
+    },
+  });
+
+  return mapAdminOrganizationMedia(mapOrganization(organization));
 }
 
 export async function reviewOrganization(
