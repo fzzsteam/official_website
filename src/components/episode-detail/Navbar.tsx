@@ -101,6 +101,21 @@ const Navbar: React.FC<NavbarProps> = () => {
               </button>
             </li>
           ))}
+          <li>
+            <a
+              href="/admin/register"
+              style={{
+                fontFamily: tokens.fontBody,
+                fontSize: 12, fontWeight: 300,
+                letterSpacing: '0.12em',
+                color: tokens.textMuted,
+                textDecoration: 'none',
+                cursor: 'pointer', padding: 0,
+              }}
+            >
+              机构入驻
+            </a>
+          </li>
         </ul>
 
         {/* Right actions */}
@@ -204,6 +219,21 @@ const Navbar: React.FC<NavbarProps> = () => {
                 {link.label}
               </button>
             ))}
+            <a
+              href="/admin/register"
+              onClick={() => setMenuOpen(false)}
+              className="w-full text-left px-6 py-3 block"
+              style={{
+                fontFamily: tokens.fontBody,
+                fontSize: 15, fontWeight: 300,
+                letterSpacing: '0.12em',
+                color: tokens.textMuted,
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              机构入驻
+            </a>
           </div>
         </div>
       )}
