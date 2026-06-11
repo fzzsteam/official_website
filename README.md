@@ -86,6 +86,21 @@ npx prisma studio
 
 ---
 
+## 线上种子数据命令
+
+线上容器启动时会通过 `docker-entrypoint.sh` 自动执行 `prisma migrate deploy`，通常不需要手动执行迁移。
+
+需要手动写入或刷新种子数据时，进入线上容器 `/app` 目录后执行：
+
+```bash
+cd /app
+node node_modules/prisma/build/index.js db seed
+```
+
+该命令与 `docker-entrypoint.sh` 中自动迁移使用同一个本地 Prisma CLI 入口；`db seed` 会按 `prisma.config.ts` 中的 seed 配置写入初始数据。执行前确认 `DATABASE_URL` 指向目标环境数据库。
+
+---
+
 ## 部署说明
 
 GitHub Actions / SAE 部署需要在仓库 Secrets 中配置：
